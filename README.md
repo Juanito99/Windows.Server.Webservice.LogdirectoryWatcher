@@ -24,15 +24,15 @@ Thresholds and alert behaviour can be overridden as usual.
 
 
 ### More information on:
-[Documentation](https://github.com/Juanito99/Network.Windows.Computer.NetstatWatcher/blob/master/Documentation/Monitor%20any%20network-connection%20or%20listening%20port%20with%20SCOM%20-%20Git.pdf)
+In progress ~
 
 
 ### Downloads:
-[ManagementPack-Sealed](https://github.com/Juanito99/Network.Windows.Computer.NetstatWatcher/blob/master/Network.Windows.Computer.NetstatWatcher/Network.Windows.Computer.NetstatWatcher/bin/Release/Network.Windows.Computer.NetstatWatcher.mpb) 
+[ManagementPack-Sealed](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/blob/master/Windows.Server.Webservice.LogdirectoryWatcher/Windows.Server.Webservice.LogdirectoryWatcher/bin/Release/Windows.Server.Webservice.LogdirectoryWatcher.xml) 
 
-[ManagementPack-UnSealed](https://github.com/Juanito99/Network.Windows.Computer.NetstatWatcher/blob/master/Network.Windows.Computer.NetstatWatcher/Network.Windows.Computer.NetstatWatcher/bin/Debug/Network.Windows.Computer.NetstatWatcher.mpb) 
+[ManagementPack-UnSealed](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/blob/master/Windows.Server.Webservice.LogdirectoryWatcher/Windows.Server.Webservice.LogdirectoryWatcher/bin/Debug/Windows.Server.Webservice.LogdirectoryWatcher.xml) 
 
-[Source for VSAE 2015](https://github.com/Juanito99/Network.Windows.Computer.NetstatWatcher/tree/master/Network.Windows.Computer.NetstatWatcher/Network.Windows.Computer.NetstatWatcher)
+[Source for VSAE 2017](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/tree/master/Windows.Server.Webservice.LogdirectoryWatcher/Windows.Server.Webservice.LogdirectoryWatcher)
 
 
 
