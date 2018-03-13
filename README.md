@@ -14,7 +14,13 @@ Thresholds and alert behaviour can be overridden as usual.
 ### State Views:
 ![StateView_WebSites](https://raw.githubusercontent.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/master/PicturesForGitWebSite/WebSites.png)
 
-![StateView_Connection](https://raw.githubusercontent.com/Juanito99/Network.Windows.Computer.NetstatWatcher/master/PicturesForGitWebSite/stateview%20showing%20tcpConnections.png)
+![StateView_Computers](https://raw.githubusercontent.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/master/PicturesForGitWebSite/Computers.png)
+
+
+
+### Alert Views:
+![AlertView_WebSites](https://raw.githubusercontent.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/master/PicturesForGitWebSite/Alerts.png)
+
 
 
 ### More information on:
