@@ -24,7 +24,7 @@ Thresholds and alert behaviour can be overridden as usual.
 
 
 ### More information on:
-In progress ~
+[Documentation](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/blob/master/Documentation/Monitoring-Webservers-Log_directory_%20size-with-SCOM.pdf)
 
 
 ### Downloads:
