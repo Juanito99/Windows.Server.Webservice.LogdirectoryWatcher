@@ -48,8 +48,9 @@ if ($discoveryItem -eq 'IIS') {
 			$webType = 'FTPSVC'
 		}
 	
-		$webLogRootDir = $webSite.LogFile
-		$webSiteId     = [double]::Parse($webSite.id)
+		$webSiteId       = 0
+		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+		$webLogRootDir   = $webSite.LogFile	
 		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
 
 		if ($webLogDirectory -match 'SystemDrive') {
@@ -60,15 +61,19 @@ if ($discoveryItem -eq 'IIS') {
 			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirNoOfFiles   = [double]::Parse((Get-ChildItem -Path $webLogDirectory).Count)		
-			$webLogDirSizeMB      = [double]::Parse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)))
+			$webLogDirNoOfFiles   = 0	
+			$null                 = [double]::TryParse((Get-ChildItem -Path $webLogDirectory).Count,[ref]$webLogDirNoOfFiles)		
+			$webLogDirSizeMB      = 0
+			$null                 = [double]::TryParse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)),[ref]$webLogDirSizeMB)
 		} elseif (Test-Path -Path $webLogRootDir) {
 			$webLogDirectory      = $webLogRootDir
 			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirNoOfFiles   = [double]::Parse((Get-ChildItem -Path $webLogDirectory).Count)		
-			$webLogDirSizeMB      = [double]::Parse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)))
+			$webLogDirNoOfFiles   = 0	
+			$null                 = [double]::TryParse((Get-ChildItem -Path $webLogDirectory).Count,[ref]$webLogDirNoOfFiles)		
+			$webLogDirSizeMB      = 0
+			$null                 = [double]::TryParse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)),[ref]$webLogDirSizeMB)
 		} else {
 			$webLogDirectory      = 'Not found: ' + $webLogDirectory
 			$webLogDirLastChanged = 'Na'
