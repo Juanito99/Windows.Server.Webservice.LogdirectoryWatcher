@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Windows.Server.Webservice.LogdirectoryWatcher</ID>
-      <Version>1.0.0.119</Version>
+      <Version>1.0.0.121</Version>
     </Identity>
     <Name>Windows.Server.Webservice.LogdirectoryWatcher</Name>
     <References>
@@ -305,7 +305,7 @@ if ($MonitorItem -eq 'IIS') {
 		$logInfoHash.Add('Status', $webSite.state)  
 		$logInfoHash.Add('SitePath', $webSite.physicalPath)
 		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate)
+		$logInfoHash.Add('LogDirScanDate', $scanDate) 
 		$logInfoHash.Add('TimeZone', $timeZone)
 		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
 		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
