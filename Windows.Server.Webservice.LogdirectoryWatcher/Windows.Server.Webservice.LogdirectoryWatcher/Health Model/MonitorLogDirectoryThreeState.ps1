@@ -110,19 +110,50 @@ if ($MonitorItem -eq 'IIS') {
 			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		    $webLogDirNoOfFiles   = 0	
-			$null                 = [double]::TryParse((Get-ChildItem -Path $webLogDirectory).Count,[ref]$webLogDirNoOfFiles)		
-			$webLogDirSizeMB      = 0
-			$null                 = [double]::TryParse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)),[ref]$webLogDirSizeMB)
+		    
+			try {
+				$rawLogDirNoOfFiles   = 0	
+				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+				$doubleLogDirSize     = $rawLogDirSize -as [double]
+				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+			} catch {
+				$rawLogDirNoOfFiles   = 0	
+				$webLogDirSizeMB      = 0
+				
+				$exceptionFullName    = $_.Exception.GetType().FullName
+				$exceptionMessage     = $_.Exception.Message
+
+				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			}			
+
 		} elseif (Test-Path -Path $webLogRootDir) {
+
 			$webLogDirectory      = $webLogRootDir
 			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirNoOfFiles   = 0	
-			$null                 = [double]::TryParse((Get-ChildItem -Path $webLogDirectory).Count,[ref]$webLogDirNoOfFiles)		
-			$webLogDirSizeMB      = 0
-			$null                 = [double]::TryParse(([Math]::Round(((Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)),[ref]$webLogDirSizeMB)
+			
+			try {
+				$rawLogDirNoOfFiles   = 0	
+				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+				$doubleLogDirSize     = $rawLogDirSize -as [double]
+				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+			} catch {
+				$rawLogDirNoOfFiles   = 0	
+				$webLogDirSizeMB      = 0
+				
+				$exceptionFullName    = $_.Exception.GetType().FullName
+				$exceptionMessage     = $_.Exception.Message
+
+				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			}
+			
 		} else {
 			$webLogDirectory      = 'Not found: ' + $webLogDirectory
 			$webLogDirLastChanged = 'Na'
@@ -147,7 +178,7 @@ if ($MonitorItem -eq 'IIS') {
 		$null       = $webSitesAll.Add($logInfoObj)		
 
 	} 
-	
+	 
 	foreach ($wbSite in $webSitesAll) {
 						
 		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
@@ -177,9 +208,27 @@ if ($MonitorItem -eq 'IIS') {
 	if (Test-Path -Path $apacheLogDirectory) {
 		$webLogDirTmp         = Get-Item -Path $apacheLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 		$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		$webLogDirNoOfFiles   = (Get-ChildItem -Path $apacheLogDirectory).Count		
-		$webLogDirSizeMB      = [Math]::Round(((Get-ChildItem -Path $apacheLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)	
+		$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
+
+		try { 
+			$rawLogDirNoOfFiles   = 0	
+			$rawLogDirNoOfFiles   = (Get-ChildItem -Path $apacheLogDirectory).Count
+			$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+			$rawLogDirSize        = (Get-ChildItem -Path $apacheLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+			$doubleLogDirSize     = $rawLogDirSize -as [double]
+			$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+		} catch {
+			$rawLogDirNoOfFiles   = 0	
+			$webLogDirSizeMB      = 0
+				
+			$exceptionFullName    = $_.Exception.GetType().FullName
+			$exceptionMessage     = $_.Exception.Message
+
+			$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+		}
+
+
 	} else {
 		$webLogDirectory      = 'Not found: ' + $webLogDirectory
 		$webLogDirLastChanged = 'Na'
@@ -212,9 +261,26 @@ if ($MonitorItem -eq 'IIS') {
 	if (Test-Path -Path $apacheLogDirectory) {
 		$webLogDirTmp         = Get-Item -Path $apacheLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
 		$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		$webLogDirNoOfFiles   = (Get-ChildItem -Path $apacheLogDirectory).Count		
-		$webLogDirSizeMB      = [Math]::Round(((Get-ChildItem -Path $apacheLogDirectory | Measure-Object -property length -sum).Sum / 1MB), 1)
+		$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 	
+
+		try { 
+			$rawLogDirNoOfFiles   = 0	
+			$rawLogDirNoOfFiles   = (Get-ChildItem -Path $apacheLogDirectory).Count
+			$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+			$rawLogDirSize        = (Get-ChildItem -Path $apacheLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+			$doubleLogDirSize     = $rawLogDirSize -as [double]
+			$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+		} catch {
+			$rawLogDirNoOfFiles   = 0	
+			$webLogDirSizeMB      = 0
+				
+			$exceptionFullName    = $_.Exception.GetType().FullName
+			$exceptionMessage     = $_.Exception.Message
+
+			$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+		}
+
 	} else {
 		$webLogDirectory      = 'Not found: ' + $webLogDirectory
 		$webLogDirLastChanged = 'Na'

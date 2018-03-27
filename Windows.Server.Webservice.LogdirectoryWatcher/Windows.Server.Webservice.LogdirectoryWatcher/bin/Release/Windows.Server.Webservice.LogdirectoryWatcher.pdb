@@ -73,7 +73,7 @@ Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.S
 Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites*244*10*DisplayString
 Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites*248*10*DisplayString
 Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites*252*10*DisplayString
-Project.mpx*Windows.Server.Webservice.LogdirectoryWatcher*5*10*DisplayString
+Project.mpx*Windows.Server.Webservice.LogdirectoryWatcher*6*10*DisplayString
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*55*10*DisplayString
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*60*10*DisplayString*SubElementID*ComputerName
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*65*10*DisplayString*SubElementID*Description
