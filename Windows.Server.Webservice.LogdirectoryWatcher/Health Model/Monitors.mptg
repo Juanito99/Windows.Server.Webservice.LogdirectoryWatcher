@@ -1,0 +1,163 @@
+<TemplateGroup>
+  <Instances>
+    <Instance ID="Instanced447b08b8a6a4ea99819b9e6ca9ff165" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.UnitMonitor" Version="1.0.0.0">
+      <UnitMonitorConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <MonitorType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType</MonitorType>
+        <MonitorConfig>&lt;IntervalSeconds&gt;600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;ApacheTomcat&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;2500&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;5000&lt;/ErrorThresholdMegaBytes&gt;</MonitorConfig>
+        <MonitorOperationalStates>
+          <OperationalState>
+            <OperationalStateId>UnderThreshold</OperationalStateId>
+            <OperationalStateDisplayName>UnderThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>UnderThreshold</MonitorTypeStateId>
+            <HealthState>Success</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverWarningThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverWarningThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverWarningThreshold</MonitorTypeStateId>
+            <HealthState>Warning</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverErrorThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverErrorThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverErrorThreshold</MonitorTypeStateId>
+            <HealthState>Error</HealthState>
+          </OperationalState>
+        </MonitorOperationalStates>
+        <ParentMonitor>Health!System.Health.AvailabilityState</ParentMonitor>
+        <Accessibility>Public</Accessibility>
+        <Id>Monitor.LogDirectorySize.ApacheTomcat</Id>
+        <DisplayName>Monitor LogDirectorySize ApacheTomcat</DisplayName>
+        <Description>Description for the new unit monitor.</Description>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat</Target>
+        <Enabled>true</Enabled>
+        <Category>AvailabilityHealth</Category>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <AlertAutoResolve>true</AlertAutoResolve>
+        <AlertOnState>Error</AlertOnState>
+        <AlertPriority>Normal</AlertPriority>
+        <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+        <AlertName>ApacheTomcat WebSite's LogDirectory size limit reached</AlertName>
+        <AlertDescription>ApacheTomcat WebSite's LogDirectory size limit reached
+
+
+TestedAt: $Data/Context/Property[@Name='testedAt']$
+
+$Data/Context/Property[@Name='Supplement']$
+
+
+Computer Description: $Data/Context/Property[@Name='ComputerDescription']$
+
+Windows Version: $Data/Context/Property[@Name='WindowsVersion']$</AlertDescription>
+        <ConfirmDelivery>false</ConfirmDelivery>
+      </UnitMonitorConfig>
+    </Instance>
+    <Instance ID="Instanceab3370a6257e4a93ba4e8785cdbc87ac" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.UnitMonitor" Version="1.0.0.0">
+      <UnitMonitorConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <MonitorType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType</MonitorType>
+        <MonitorConfig>&lt;IntervalSeconds&gt;600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;IIS&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;2500&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;5000&lt;/ErrorThresholdMegaBytes&gt;</MonitorConfig>
+        <MonitorOperationalStates>
+          <OperationalState>
+            <OperationalStateId>UnderThreshold</OperationalStateId>
+            <OperationalStateDisplayName>UnderThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>UnderThreshold</MonitorTypeStateId>
+            <HealthState>Success</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverWarningThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverWarningThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverWarningThreshold</MonitorTypeStateId>
+            <HealthState>Warning</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverErrorThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverErrorThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverErrorThreshold</MonitorTypeStateId>
+            <HealthState>Error</HealthState>
+          </OperationalState>
+        </MonitorOperationalStates>
+        <ParentMonitor>Health!System.Health.AvailabilityState</ParentMonitor>
+        <Accessibility>Public</Accessibility>
+        <Id>Monitor.LogDirectorySize.IIS</Id>
+        <DisplayName>Monitor LogDirectorySize IIS</DisplayName>
+        <Description>Description for the new unit monitor.</Description>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS</Target>
+        <Enabled>true</Enabled>
+        <Category>AvailabilityHealth</Category>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <AlertAutoResolve>true</AlertAutoResolve>
+        <AlertOnState>Error</AlertOnState>
+        <AlertPriority>Normal</AlertPriority>
+        <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+        <AlertName>IIS WebSite's LogDirectory size limit reached</AlertName>
+        <AlertDescription>IIS WebSite's LogDirectory size limit reached
+
+
+TestedAt: $Data/Context/Property[@Name='testedAt']$
+
+$Data/Context/Property[@Name='Supplement']$
+
+
+Computer Description: $Data/Context/Property[@Name='ComputerDescription']$
+
+Windows Version: $Data/Context/Property[@Name='WindowsVersion']$</AlertDescription>
+        <ConfirmDelivery>false</ConfirmDelivery>
+      </UnitMonitorConfig>
+    </Instance>
+    <Instance ID="Instancea7e86ed212aa4e79a1b1176ed7ed3bde" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.UnitMonitor" Version="1.0.0.0">
+      <UnitMonitorConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <MonitorType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType</MonitorType>
+        <MonitorConfig>&lt;IntervalSeconds&gt;600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;Apache&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;2500&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;5000&lt;/ErrorThresholdMegaBytes&gt;</MonitorConfig>
+        <MonitorOperationalStates>
+          <OperationalState>
+            <OperationalStateId>UnderThreshold</OperationalStateId>
+            <OperationalStateDisplayName>UnderThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>UnderThreshold</MonitorTypeStateId>
+            <HealthState>Success</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverWarningThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverWarningThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverWarningThreshold</MonitorTypeStateId>
+            <HealthState>Warning</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>OverErrorThreshold</OperationalStateId>
+            <OperationalStateDisplayName>OverErrorThreshold</OperationalStateDisplayName>
+            <MonitorTypeStateId>OverErrorThreshold</MonitorTypeStateId>
+            <HealthState>Error</HealthState>
+          </OperationalState>
+        </MonitorOperationalStates>
+        <ParentMonitor>Health!System.Health.AvailabilityState</ParentMonitor>
+        <Accessibility>Public</Accessibility>
+        <Id>Monitor.LogDirectorySize.Apache</Id>
+        <DisplayName>Monitor LogDirectorySize Apache</DisplayName>
+        <Description>Description for the new unit monitor.</Description>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache</Target>
+        <Enabled>true</Enabled>
+        <Category>AvailabilityHealth</Category>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <AlertAutoResolve>true</AlertAutoResolve>
+        <AlertOnState>Error</AlertOnState>
+        <AlertPriority>Normal</AlertPriority>
+        <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+        <AlertName>Apache WebSite's LogDirectory size limit reached</AlertName>
+        <AlertDescription>Apache WebSite's LogDirectory size limit reached
+
+
+TestedAt: $Data/Context/Property[@Name='testedAt']$
+
+$Data/Context/Property[@Name='Supplement']$
+
+
+Computer Description: $Data/Context/Property[@Name='ComputerDescription']$
+
+Windows Version: $Data/Context/Property[@Name='WindowsVersion']$</AlertDescription>
+        <ConfirmDelivery>false</ConfirmDelivery>
+      </UnitMonitorConfig>
+    </Instance>
+  </Instances>
+</TemplateGroup>
