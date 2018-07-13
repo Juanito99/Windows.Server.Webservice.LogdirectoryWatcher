@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Windows.Server.Webservice.LogdirectoryWatcher</ID>
-      <Version>1.0.0.133</Version>
+      <Version>1.0.0.329</Version>
     </Identity>
     <Name>Windows.Server.Webservice.LogdirectoryWatcher</Name>
     <References>
@@ -40,6 +40,11 @@
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache" Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat" Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
+        <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="TaskName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
+          <Property ID="TaskType" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
+          <Property ID="ScriptPath" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
+        </ClassType>
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" Accessibility="Public" Abstract="true" Base="System!System.LogicalEntity" Hosted="false" Singleton="false" Extension="false">
           <Property ID="ComputerName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="WindowsVersion" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
@@ -244,120 +249,128 @@ Function Send-PropertyBag {
 
 if ($MonitorItem -eq 'IIS') {
 
-	Import-Module -Name Webadministration
+	try {
+
+		Import-Module -Name Webadministration
 		
-	$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
-			@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
-			@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
+		$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
+				@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
+				@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
 
-	$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',301,4,"Found IIS Websites No: $($webSitesIIS.count)")	
+		$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',301,4,"Found IIS Websites No: $($webSitesIIS.count)")	
 
-	$webSitesAll = New-Object -TypeName System.Collections.ArrayList
+		$webSitesAll = New-Object -TypeName System.Collections.ArrayList
 
-	foreach ($webSite in $webSitesIIS) {
+		foreach ($webSite in $webSitesIIS) {
 
-		$webBindings = $webSite.Bindings 
+			$webBindings = $webSite.Bindings 
 
-		if ($webBindings -match 'http') {
-			$webType = 'W3SVC'
-		} 
+			if ($webBindings -match 'http') {
+				$webType = 'W3SVC'
+			} 
 
-		if ($webBindings -match 'ftp') {
-			$webType = 'FTPSVC'
-		}
-	
-		$webSiteId       = 0
-		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
-		$webLogRootDir   = $webSite.LogFile		
-		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
-
-		if ($webLogDirectory -match 'SystemDrive') {
-			$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
-		} 
-		
-		if (Test-Path -Path $webLogDirectory) {
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		    
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
-			}			
-
-		} elseif (Test-Path -Path $webLogRootDir) {
-
-			$webLogDirectory      = $webLogRootDir
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webBindings -match 'ftp') {
+				$webType = 'FTPSVC'
 			}
+	
+			$webSiteId       = 0
+			$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+			$webLogRootDir   = $webSite.LogFile		
+			$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
+
+			if ($webLogDirectory -match 'SystemDrive') {
+				$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
+			} 
+		
+			if (Test-Path -Path $webLogDirectory) {
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+		    
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}			
+
+			} elseif (Test-Path -Path $webLogRootDir) {
+
+				$webLogDirectory      = $webLogRootDir
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			
-		} else {
-			$webLogDirectory      = 'Not found: ' + $webLogDirectory
-			$webLogDirLastChanged = 'Na'
-			$webLogDirCreated     = 'Na'
-			$webLogDirNoOfFiles   = [double]::Parse('0')
-			$webLogDirSizeMB      = [double]::Parse('0')
-		}
-	
-		$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )')}
-		$logInfoHash.Add('SiteId', $webSiteId)  
-		$logInfoHash.Add('Status', $webSite.state)  
-		$logInfoHash.Add('SitePath', $webSite.physicalPath)
-		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate) 
-		$logInfoHash.Add('TimeZone', $timeZone)
-		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
-		$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-		$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-		$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
-		$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
-		$null       = $webSitesAll.Add($logInfoObj)		
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
 
-	} 
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} else {
+				$webLogDirectory      = 'Not found: ' + $webLogDirectory
+				$webLogDirLastChanged = 'Na'
+				$webLogDirCreated     = 'Na'
+				$webLogDirNoOfFiles   = [double]::Parse('0')
+				$webLogDirSizeMB      = [double]::Parse('0')
+			}
+	
+			$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )')}
+			$logInfoHash.Add('SiteId', $webSiteId)  
+			$logInfoHash.Add('Status', $webSite.state)  
+			$logInfoHash.Add('SitePath', $webSite.physicalPath)
+			$logInfoHash.Add('Bindings', $webBindings)
+			$logInfoHash.Add('LogDirScanDate', $scanDate) 
+			$logInfoHash.Add('TimeZone', $timeZone)
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
+			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
+			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
+			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
+			$null       = $webSitesAll.Add($logInfoObj)		
+
+		} 
 	 
-	foreach ($wbSite in $webSitesAll) {
+		foreach ($wbSite in $webSitesAll) {
 						
-		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
-		$Key         = $Key -replace ' ','_'
-		$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName		
+			$Key         = $ComputerName + '-' + $($wbSite.SiteName)
+			$Key         = $Key -replace ' ','_'
+			$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName		
 	
-		Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $wbSite.LogDirSizeInMB -logDirPath $wbSite.LogDirPath `
-						 -logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+			Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $wbSite.LogDirSizeInMB -logDirPath $wbSite.LogDirPath `
+							 -logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
 
-	} 
+		} 
+
+	} catch {
+
+		$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',201,1,"Computer: $($computerName) checking for $($discoveryItem) got errors. No Webadministration Module was found!")	
+
+	}	
 
 } elseIf ($MonitorItem -eq 'Apache') {
 
@@ -409,8 +422,8 @@ if ($MonitorItem -eq 'IIS') {
 	$Key         = $ComputerName + '-' + 'ApacheWebSite'
 	$displayName = 'ApacheWebSite ' + ' On ' + $ComputerName			
 	
-	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $wbSite.LogDirPath `
-						-logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $apacheLogDirectory `
+						-logDirModifiedDate $webLogDirLastChanged  -logDirNoOfFiles $webLogDirNoOfFiles
 	
 } elseIf ($MonitorItem -eq 'ApacheTomcat') {
 
@@ -461,8 +474,8 @@ if ($MonitorItem -eq 'IIS') {
 	$Key         = $ComputerName + '-' + 'ApacheTomcatWebSite'
 	$displayName = 'ApacheTomcatWebSite ' + ' On ' + $ComputerName
 		
-	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $wbSite.LogDirPath `
-						-logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $apacheLogDirectory `
+						-logDirModifiedDate $webLogDirLastChanged  -logDirNoOfFiles $webLogDirNoOfFiles 		
 
 } else {
 
@@ -494,6 +507,567 @@ if ($MonitorItem -eq 'IIS') {
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </ProbeActionModuleType>
+      <WriteActionModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="LogDirectory" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebServerType" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysToKeepLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScheduledTasksFolder" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="DaysToKeepLogs" Selector="$Config/DaysToKeepLogs$" ParameterType="int" />
+          <OverrideableParameter ID="ScheduledTasksFolder" Selector="$Config/ScheduledTasksFolder$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="PowerShellWriteAction" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>LogdirectoryWatcher.Recovery.DeleteLogs.ps1</ScriptName>
+                <ScriptBody><![CDATA[param($LogDirectory, $webServerType, $daysToKeepLogs, $scheduledTasksFolder)
+
+$api = New-Object -ComObject 'MOM.ScriptAPI'
+$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3000,2,"Recovery kicks in with Supplement $($LogDirectory) and WebServerType: $($webServerType) and scheduled task folder $($scheduledTasksFolder)")	
+
+$ComputerName         = $env:COMPUTERNAME
+      
+$logDirectoryClean    = $logDirectory      -Replace('\\','-')
+$logDirectoryClean    = $logDirectoryClean -Replace(':','')
+
+$scheduledTasksFolder = $scheduledTasksFolder -replace([char]34,'')
+$scheduledTasksFolder = $scheduledTasksFolder -replace("`"",'')
+$taskName             = "Auto-Log-Dir-Cleaner_Delete_for_$($logDirectoryClean)_on_$($ComputerName)"
+$taskName             = $taskName -replace '\s',''
+$scriptFileName       = $taskName + '.ps1'
+$scriptPath           = Join-Path -Path $scheduledTasksFolder -ChildPath $scriptFileName
+
+                       
+if ($daysToKeepLogs -eq $null) {
+	$daysToKeepLogs = 8
+}
+
+if ($scheduledTasksFolder -eq $null) {
+	$scheduledTasksFolder = 'C:\ScheduledTasks'
+}
+
+Function Write-LogDirCleanScript {
+
+	param(
+		[string]$scheduledTasksFolder,
+		[string]$logDirectory,		
+		[int]$retainValue,		
+		[string]$webServerType,
+		[string]$scriptPath
+	)
+	
+	if (Test-Path -Path $scheduledTasksFolder) {
+		$foo = 'folder exists, no action requried'
+	} else {
+		& mkdir $scheduledTasksFolder
+	}
+
+	$fileContent   = '' 	
+
+$iisLogContent = @"
+`$now = Get-Date
+$([System.Environment]::NewLine)
+Get-ChildItem -Path `"${logDirectory}\*`" -Include *.log -ErrorAction SilentlyContinue | Where-Object { (New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${retainValue} } | Remove-Item -Force	
+"@
+
+$apacheTomcatLogContent = @"
+`$now = Get-Date
+$([System.Environment]::NewLine)
+Get-ChildItem -Path `"${logDirectory}\*`" -Include *.log, *.txt -ErrorAction SilentlyContinue | Where-Object { (New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${retainValue} } | Remove-Item -Force
+"@		
+
+$apacheLogContent = @"
+`$now = Get-Date
+$([System.Environment]::NewLine)
+& cd `"${logDirectory}`"
+$([System.Environment]::NewLine)
+Get-Service -Name *apache*   | Stop-Service
+$([System.Environment]::NewLine)
+Get-ChildItem -Path `"${logDirectory}`" -Include *.log, *.txt -ErrorAction SilentlyContinue | Where-Object { ((New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${retainValue}) } | Remove-Item -Force
+$([System.Environment]::NewLine)
+'' | Out-File -FilePath `"${logDirectory}\access.log`" -Encoding ascii
+$([System.Environment]::NewLine)
+'' | Out-File -FilePath `"${logDirectory}\error.log`" -Encoding ascii
+$([System.Environment]::NewLine)
+Get-Service -Name *apache* | Start-Service		
+"@
+
+	if ($webServerType -eq 'IIS') {		
+		$fileContent = $iisLogContent		
+	} elseif ($webServerType -eq 'ApacheTomcat' ) {
+		$fileContent = $apacheTomcatLogContent
+	} elseif ($webServertype -eq 'Apache') {
+		$fileContent = $apacheLogContent			
+	} else {		
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed, no valid webServerType (IIS, Apache, ApacheTomcat) received: $($webServerType)")
+	}
+
+	if ($fileContent -ne '') {
+		$fileContent | Set-Content -Path $scriptPath -Force
+	} else {		
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed. FileContent: `fileContent is empty")
+	}	
+
+	if ($error) {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed. $($error)")		
+	} else {
+		$foo = 'No error occured'		
+	}
+
+} #End Function Write-LogDirCleanScript
+
+
+Function Invoke-ScheduledTaskCreation {
+
+	param(
+		[string]$ComputerName,		
+		[string]$taskName
+	)         	 		
+	
+	$taskRunFile         = "C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NonInteractive -File $($scriptPath)"	
+	$taskStartTimeOffset = Get-Random -Minimum 1 -Maximum 10
+	$taskStartTime       = (Get-Date).AddMinutes($taskStartTimeOffset) | Get-date -Format 'HH:mm'						 						
+	$taskSchedule        = 'DAILY'	
+	& SCHTASKS /Create /SC $($taskSchedule) /RU `"NT AUTHORITY\SYSTEM`" /TN $($taskName) /TR $($taskRunFile) /ST $($taskStartTime) /F				
+		
+	if ($error) {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3002,1,"Recovery script function (Invoke-ScheduledTaskCreation) Failure during task creation! $($error)")		
+	} else {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.DeleteLogs.ps1',3002,4,"Recovery script function (Invoke-ScheduledTaskCreation) succeed.")		
+	}	
+
+} #End Function Invoke-ScheduledTaskCreation
+
+
+Function Save-TaskDateInRegistry {
+
+	param(
+		[string]$taskName,
+		[string]$scriptPath
+	)
+
+	$registryPath = "HKLM:\Software\ABCIT\LogDirectoryWatcher"
+	
+	$NameOfTask     = @{Name="TaskName"; Value=$taskName}
+	$TypeOfTask     = @{Name="TaskType"; Value="Deletion"}
+	$scriptLocation = @{Name="ScriptPath"; Value=$scriptPath}
+
+	$regKeys = @($NameOfTask,$TypeOfTask,$scriptLocation)
+
+	foreach($rkey in $regKeys) {
+		if ( Test-Path $registryPath)  {
+			New-ItemProperty -Path $registryPath -Name $rkey.Name -Value $rkey.Value -PropertyType STRING -Force | Out-Null
+		} else {
+			New-Item -Path $registryPath -Force | Out-Null
+			New-ItemProperty -Path $registryPath -Name $rkey.Name -Value $rkey.Value -PropertyType STRING -Force | Out-Null
+		}
+	}
+
+} #end Function Save-TaskDateInRegistry
+
+
+$logDirCleanScriptParams   = @{
+	'scheduledTasksFolder' = $scheduledTasksFolder
+	'logDirectory'         = $logDirectory	
+	'retainValue'          = $daysToKeepLogs	
+	'webServerType'        = $webServerType
+	'scriptPath'           = $scriptPath
+}
+
+Write-LogDirCleanScript @logDirCleanScriptParams
+
+
+$taskCreationParams = @{
+	'ComputerName'  = $ComputerName	
+	'taskName'      = $taskName
+	'scriptPath'    = $scriptPath
+}
+
+Invoke-ScheduledTaskCreation @taskCreationParams
+
+
+Save-TaskDateInRegistry -taskName $taskName -scriptPath $scriptPath]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>logDirectory</Name>
+                    <Value>$Config/LogDirectory$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>webServerType</Name>
+                    <Value>$Config/WebServerType$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>daysToKeepLogs</Name>
+                    <Value>$Config/DaysToKeepLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>scheduledTasksFolder</Name>
+                    <Value>$Config/ScheduledTasksFolder$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PowerShellWriteAction" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Windows!Microsoft.Windows.SerializedObjectData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+      <WriteActionModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="LogDirectory" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebServerType" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysBeforeCompressLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysBeforeDeleteCompressedLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScheduledTasksFolder" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="DaysBeforeCompressLogs" Selector="$Config/DaysBeforeCompressLogs$" ParameterType="int" />
+          <OverrideableParameter ID="DaysBeforeDeleteCompressedLogs" Selector="$Config/DaysBeforeDeleteCompressedLogs$" ParameterType="int" />
+          <OverrideableParameter ID="ScheduledTasksFolder" Selector="$Config/ScheduledTasksFolder$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="PowerShellWriteAction" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>LogdirectoryWatcher.Recovery.CompressLogs.ps1</ScriptName>
+                <ScriptBody><![CDATA[param($logDirectory,$webServerType,$DaysBeforeDeleteCompressedLogs,$DaysBeforeCompressLogs,$ScheduledTasksFolder)
+
+
+$api = New-Object -ComObject 'MOM.ScriptAPI'
+$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4000,2,"Recovery kicks in with Supplement $($LogDirectory) and WebServerType: $($webServerType) and scheduled task folder $($scheduledTasksFolder)")	
+
+$ComputerName         = $env:COMPUTERNAME
+      
+$logDirectoryClean    = $logDirectory      -Replace('\\','-')
+$logDirectoryClean    = $logDirectoryClean -Replace(':','')
+
+$scheduledTasksFolder = $scheduledTasksFolder -replace([char]34,'')
+$scheduledTasksFolder = $scheduledTasksFolder -replace("`"",'')
+$taskName             = "Auto-Log-Dir-Cleaner_Compress-Delete_for_$($logDirectoryClean)_on_$($ComputerName)"
+$taskName             = $taskName -replace '\s',''
+$scriptFileName       = $taskName + '.ps1'
+$scriptPath           = Join-Path -Path $scheduledTasksFolder -ChildPath $scriptFileName
+
+                       
+if (($DaysBeforeCompressLogs -eq $null) -or ($DaysBeforeCompressLogs -notMatch '\d') -or ($DaysBeforeCompressLogs -le 0)) {		
+	$msg = 'Script Error. DaysBeforeCompressLogs invalid.  Value: $($DaysBeforeCompressLogs) '
+	$api.LogScriptEvent('CreateLogCompressDeletionJob',4100,1,$msg)	
+	Exit
+}
+
+if ($scheduledTasksFolder -eq $null) {
+	$scheduledTasksFolder = 'C:\ScheduledTasks'	
+} else {
+	$msg = 'Script info. ScheduledTasksFolder not defined. Defaulting to C:\ScheduledTasks'
+	$api.LogScriptEvent('CreateLogCompressDeletionJob',4100,2,$msg)		
+}
+
+if ($logDirectory -match 'ThelogDirectory') {
+	$msg =  'CreateLogCompressDeletionJob.ps1 - Script Error. logDirectory not defined. Script ends.'
+	$api.LogScriptEvent('CreateLogCompressDeletionJob',4100,1,$msg)	
+	Exit
+}
+
+
+Function Write-LogDirCleanScript {
+
+	param(
+		[string]$scheduledTasksFolder,
+		[string]$logDirectory,		
+		[int]$DaysBeforeCompressLogs,
+		[int]$DaysBeforeDeleteCompressedLogs,
+		[string]$webServerType,
+		[string]$scriptPath
+	)
+	
+	if (Test-Path -Path $scheduledTasksFolder) {
+		$foo = 'folder exists, no action requried'
+	} else {
+		& mkdir $scheduledTasksFolder
+	}
+	
+	if (Test-Path -Path $logDirectory) {
+		$foo = 'folder exists, no action requried'
+	} else {
+		$msg = "Script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed. logDirectory not found $($logDirectory)"
+		Write-Warning -Message $msg
+		$api.LogScriptEvent('CreateLogCompressDeletionJob',4101,1,$msg)		
+		Exit
+	}
+
+	$fileContent   = '' 	
+
+	if ($webServerType -eq 'IIS') {	
+		$LogFileTypes =  '*.log'
+	} elseif ($webServerType -eq 'ApacheTomcat' ) {
+		$LogFileTypes =  '*.log, *.txt'
+	}  elseif ($webServertype -eq 'Apache') {
+		$LogFileTypes =  '*.log'
+	} else {		
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed, no valid webServerType (IIS, Apache, ApacheTomcat) received: $($webServerType)")
+	}
+
+
+	#ISSUE! - If Apache it must be the log-creation-day, not the modification day!
+
+$fileContent = @"
+if (`"${webServerType}`" -eq "Apache") {
+	$([System.Environment]::NewLine)
+	Get-Service -Name *apache*   | Stop-Service
+	$([System.Environment]::NewLine)
+} else {
+	$([System.Environment]::NewLine)
+	`$foo = 'Keep services running'
+}
+$([System.Environment]::NewLine)
+& cd `"${logDirectory}`"
+$([System.Environment]::NewLine)
+`$timeStamp = Get-Date -Format 'yyyy-MM-dd_hh-mm'
+$([System.Environment]::NewLine)
+`$now = Get-Date
+$([System.Environment]::NewLine)
+`$tmpLogFolder = `"${logDirectory}`" + '_CompressLogsOn_' + `$timeStamp
+$([System.Environment]::NewLine)
+if (Test-Path -Path `$tmpLogFolder) {
+$([System.Environment]::NewLine)
+	`$foo = 'No action required, folder exists.'
+$([System.Environment]::NewLine)
+} else {
+$([System.Environment]::NewLine)
+	& mkdir `$tmpLogFolder
+$([System.Environment]::NewLine)
+}
+$([System.Environment]::NewLine)
+`$logDirectoryParent = `$tmpLogFolder.SubString(0,`$tmpLogFolder.LastIndexOf('\')) + '\'
+$([System.Environment]::NewLine)
+try {
+	$([System.Environment]::NewLine)
+	`$targetLogZip = `"${logDirectory}`" + '_CompressLogsOn_' + `$timeStamp + '.zip'
+	$([System.Environment]::NewLine)	
+	Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+	$([System.Environment]::NewLine)	
+	if (`"${webServerType}`" -eq "Apache") {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path `"${logDirectory}\*`" -Include ${LogFileTypes} -ErrorAction SilentlyContinue | Where-Object { (New-TimeSpan -start `$_.CreationTime -end (`$now)).TotalDays -gt ${DaysBeforeCompressLogs} } | ForEach-Object {
+			$([System.Environment]::NewLine)	
+			Move-Item -Path `$_ -Destination `$tmpLogFolder				
+			$([System.Environment]::NewLine)
+		}
+		$([System.Environment]::NewLine)
+	} else {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path `"${logDirectory}\*`" -Include ${LogFileTypes} -ErrorAction SilentlyContinue | Where-Object { (New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${DaysBeforeCompressLogs} } | ForEach-Object {
+			$([System.Environment]::NewLine)	
+			Move-Item -Path `$_ -Destination `$tmpLogFolder				
+			$([System.Environment]::NewLine)
+		}	
+		$([System.Environment]::NewLine)
+	}
+	$([System.Environment]::NewLine)
+	[System.IO.Compression.ZipFile]::CreateFromDirectory(`$tmpLogFolder,`$targetLogZip)	
+	$([System.Environment]::NewLine)
+	Get-ChildItem -Path `$tmpLogFolder -Recurse | ForEach-Object {
+		$([System.Environment]::NewLine)
+		Remove-Item -Path `$_.FullName
+		$([System.Environment]::NewLine)
+	}
+	$([System.Environment]::NewLine)
+	Remove-Item -Path `$tmpLogFolder
+	$([System.Environment]::NewLine)	
+	if ( ${DaysBeforeDeleteCompressedLogs} -gt 0 ) {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path `$logDirectoryParent -Filter '*_CompressLogsOn_*.zip' -ErrorAction SilentlyContinue | Where-Object { (New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${DaysBeforeDeleteCompressedLogs} } | Remove-Item -Force		
+		$([System.Environment]::NewLine)
+	}
+	$([System.Environment]::NewLine)
+
+} catch {
+	$([System.Environment]::NewLine)
+	if (`"${webServerType}`" -eq "Apache") {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path `"${logDirectory}\*`" -Include ${LogFileTypes} -ErrorAction SilentlyContinue | Where-Object { ((New-TimeSpan -start `$_.CreationTime -end (`$now)).TotalDays -gt ${DaysBeforeCompressLogs}) -and(`$_.Attributes -notMatch 'Compressed') } | ForEach-Object {	
+			$([System.Environment]::NewLine)
+			Move-Item -Path `$_ -Destination `$tmpLogFolder		
+			$([System.Environment]::NewLine)
+		}
+		$([System.Environment]::NewLine)
+	} else {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path `"${logDirectory}\*`" -Include ${LogFileTypes} -ErrorAction SilentlyContinue | Where-Object { ((New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${DaysBeforeCompressLogs}) -and(`$_.Attributes -notMatch 'Compressed') } | ForEach-Object {	
+			$([System.Environment]::NewLine)
+			Move-Item -Path `$_ -Destination `$tmpLogFolder		
+			$([System.Environment]::NewLine)
+		}
+		$([System.Environment]::NewLine)	
+	}
+	$([System.Environment]::NewLine)	
+	& COMPACT /I /Q /C /S:`$tmpLogFolder    	
+	$([System.Environment]::NewLine)
+
+	if ( ${DaysBeforeDeleteCompressedLogs} -gt 0 ) {
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path "`$(`$logDirectoryParent)*_CompressLogsOn_*" -Recurse -ErrorAction SilentlyContinue | Where-Object { ((New-TimeSpan -start `$_.LastWriteTime -end (`$now)).TotalDays -gt ${DaysBeforeDeleteCompressedLogs}) -and (`$_.Attributes -match 'Compressed') } | Remove-Item -Force		
+		$([System.Environment]::NewLine)
+		Get-ChildItem -Path "`$(`$logDirectoryParent)*_CompressLogsOn_*" -ErrorAction SilentlyContinue | Where-Object { ((New-TimeSpan -start `$_.CreationTime -end (`$now)).TotalDays -gt ${DaysBeforeDeleteCompressedLogs}) -and (`$_.Attributes -match 'Compressed') } | Remove-Item -Force		
+		$([System.Environment]::NewLine)
+	}
+	$([System.Environment]::NewLine)
+
+}
+$([System.Environment]::NewLine)
+if (`"${webServerType}`" -eq "Apache") {
+	$([System.Environment]::NewLine)
+	'' | Out-File -FilePath `"${logDirectory}\access.log`" -Encoding ascii 
+	$([System.Environment]::NewLine)
+	'' | Out-File -FilePath `"${logDirectory}\error.log`" -Encoding ascii
+	$([System.Environment]::NewLine)
+
+	$([System.Environment]::NewLine)
+	Get-Service -Name *apache* | Start-Service
+	$([System.Environment]::NewLine)
+} else {
+	$([System.Environment]::NewLine)
+	`$foo = 'Keep services running'
+}
+$([System.Environment]::NewLine)
+"@
+
+	if ($fileContent -ne '') {
+		$fileContent | Set-Content -Path $scriptPath -Force
+	} else {		
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed. FileContent: `fileContent is empty")
+	}	
+
+	if ($error) {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4001,1,"Recovery script function (Write-LogDirCleanScript, scriptPath: $($scriptPath)) failed. $($error)")		
+	} else {
+		$foo = 'No error occured'		
+	}
+
+} #End Function Write-LogDirCleanScript
+
+
+Function Invoke-ScheduledTaskCreation {
+
+	param(
+		[string]$ComputerName,		
+		[string]$taskName
+	)         	 
+		
+	$taskRunFile         = "C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NonInteractive -File $($scriptPath)"	
+	$taskStartTimeOffset = 5
+	$taskStartTime       = (Get-Date).AddMinutes($taskStartTimeOffset) | Get-date -Format 'HH:mm'						 						
+	$taskSchedule        = 'DAILY'	
+	& SCHTASKS /Create /SC $($taskSchedule) /RU `"NT AUTHORITY\SYSTEM`" /TN $($taskName) /TR $($taskRunFile) /ST $($taskStartTime) /F			
+		
+	if ($error) {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4002,1,"Recovery script function (Invoke-ScheduledTaskCreation) Failure during task creation! $($error)")		
+	} else {
+		$api.LogScriptEvent('LogdirectoryWatcher.Recovery.CompressLogs.ps1',4002,4,"Recovery script function (Invoke-ScheduledTaskCreation) succeed.")		
+	}	
+
+} #End Function Invoke-ScheduledTaskCreation
+
+
+Function Save-TaskDateInRegistry {
+
+	param(
+		[string]$taskName,
+		[string]$scriptPath
+	)
+
+	$registryPath = "HKLM:\Software\ABCIT\LogDirectoryWatcher"
+	
+	$NameOfTask     = @{Name="TaskName"; Value=$taskName}
+	$TypeOfTask     = @{Name="TaskType"; Value="Compression ( + Deletion )"}
+	$scriptLocation = @{Name="ScriptPath"; Value=$scriptPath}
+
+	$regKeys = @($NameOfTask,$TypeOfTask,$scriptLocation)
+
+	foreach($rkey in $regKeys) {
+		if ( Test-Path $registryPath)  {
+			New-ItemProperty -Path $registryPath -Name $rkey.Name -Value $rkey.Value -PropertyType STRING -Force | Out-Null
+		} else {
+			New-Item -Path $registryPath -Force | Out-Null
+			New-ItemProperty -Path $registryPath -Name $rkey.Name -Value $rkey.Value -PropertyType STRING -Force | Out-Null
+		}
+	}
+
+} #end Function Save-TaskDateInRegistry
+
+
+$logDirCleanScriptParams = @{
+	'scheduledTasksFolder'           = $scheduledTasksFolder
+	'logDirectory'                   = $logDirectory	
+	'DaysBeforeCompressLogs'         = $DaysBeforeCompressLogs	
+	'DaysBeforeDeleteCompressedLogs' = $DaysBeforeDeleteCompressedLogs
+	'webServerType'                  = $webServerType
+	'scriptPath'                     = $scriptPath
+}
+
+Write-LogDirCleanScript @logDirCleanScriptParams
+
+
+$taskCreationParams = @{
+	'ComputerName'  = $ComputerName	
+	'taskName'      = $taskName
+	'scriptPath'    = $scriptPath
+}
+
+Invoke-ScheduledTaskCreation @taskCreationParams
+
+
+Save-TaskDateInRegistry -taskName $taskName -scriptPath $scriptPath]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>logDirectory</Name>
+                    <Value>$Config/LogDirectory$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>webServerType</Name>
+                    <Value>$Config/WebServerType$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>DaysBeforeDeleteCompressedLogs</Name>
+                    <Value>$Config/DaysBeforeDeleteCompressedLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>DaysBeforeCompressLogs</Name>
+                    <Value>$Config/DaysBeforeCompressLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>scheduledTasksFolder</Name>
+                    <Value>$Config/ScheduledTasksFolder$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PowerShellWriteAction" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Windows!Microsoft.Windows.SerializedObjectData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
       <UnitMonitorType ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType" Accessibility="Public">
@@ -593,6 +1167,9 @@ if ($MonitorItem -eq 'IIS') {
       </UnitMonitorType>
     </MonitorTypes>
   </TypeDefinitions>
+  <Categories>
+    <Category ID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTaskCategory" Target="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask" Value="System!System.Internal.ManagementPack.ConsoleTasks.MonitoringObject" />
+  </Categories>
   <Monitoring>
     <Discoveries>
       <Discovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ApacheTomcat" Target="Windows!Microsoft.Windows.Server.Computer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
@@ -716,19 +1293,37 @@ if ($MonitorItem -eq 'IIS') {
           </Expression>
         </DataSource>
       </Discovery>
-      <Discovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS" Target="Windows!Microsoft.Windows.Server.Computer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+      <Discovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ManagedByTask" Target="Windows!Microsoft.Windows.Server.Computer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
         <Category>Discovery</Category>
         <DiscoveryTypes>
-          <DiscoveryClass TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" />
+          <DiscoveryClass TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" />
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
           <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
           <RegistryAttributeDefinitions>
             <RegistryAttributeDefinition>
               <AttributeName>KeyExists</AttributeName>
-              <Path>System\CurrentControlSet\Services\IISAdmin</Path>
+              <Path>Software\ABCIT\LogDirectoryWatcher</Path>
               <PathType>0</PathType>
               <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>TaskName</AttributeName>
+              <Path>Software\ABCIT\LogDirectoryWatcher\TaskName</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>TaskType</AttributeName>
+              <Path>Software\ABCIT\LogDirectoryWatcher\TaskType</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>ScriptPath</AttributeName>
+              <Path>Software\ABCIT\LogDirectoryWatcher\ScriptPath</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
             </RegistryAttributeDefinition>
             <RegistryAttributeDefinition>
               <AttributeName>WindowsVersion</AttributeName>
@@ -737,14 +1332,14 @@ if ($MonitorItem -eq 'IIS') {
               <AttributeType>1</AttributeType>
             </RegistryAttributeDefinition>
             <RegistryAttributeDefinition>
-              <AttributeName>Description</AttributeName>
+              <AttributeName>ComputerDescription</AttributeName>
               <Path>SYSTEM\CurrentControlSet\services\LanmanServer\Parameters\srvcomment</Path>
               <PathType>1</PathType>
               <AttributeType>1</AttributeType>
             </RegistryAttributeDefinition>
           </RegistryAttributeDefinitions>
-          <Frequency>86400</Frequency>
-          <ClassId>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS"]$</ClassId>
+          <Frequency>43200</Frequency>
+          <ClassId>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask"]$</ClassId>
           <InstanceSettings>
             <Settings>
               <Setting>
@@ -765,7 +1360,19 @@ if ($MonitorItem -eq 'IIS') {
               </Setting>
               <Setting>
                 <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer"]/Description$</Name>
-                <Value>$Data/Values/Description$</Value>
+                <Value>$Data/Values/ComputerDescription$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask"]/TaskType$</Name>
+                <Value>$Data/Values/TaskType$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask"]/TaskName$</Name>
+                <Value>$Data/Values/TaskName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask"]/ScriptPath$</Name>
+                <Value>$Data/Values/ScriptPath$</Value>
               </Setting>
             </Settings>
           </InstanceSettings>
@@ -943,143 +1550,151 @@ if (([string]::IsNullOrEmpty($computerDescription)) -or ([string]::IsNullOrWhite
 
 if ($discoveryItem -eq 'IIS') {
 
-	Import-Module -Name Webadministration
+	try {
+
+		Import-Module -Name Webadministration
 		
-	$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
-			@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
-			@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
+		$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
+				@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
+				@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
 
-	$webSitesAll = New-Object -TypeName System.Collections.ArrayList
+		$webSitesAll = New-Object -TypeName System.Collections.ArrayList
 
-	foreach ($webSite in $webSitesIIS) {
+		foreach ($webSite in $webSitesIIS) {
 
-		$webBindings = $webSite.Bindings 
+			$webBindings = $webSite.Bindings 
 
-		if ($webBindings -match 'http') {
-			$webType = 'W3SVC'
-		} 
+			if ($webBindings -match 'http') {
+				$webType = 'W3SVC'
+			} 
 
-		if ($webBindings -match 'ftp') {
-			$webType = 'FTPSVC'
-		}
-	
-		$webSiteId       = 0
-		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
-		$webLogRootDir   = $webSite.LogFile	
-		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
-
-		if ($webLogDirectory -match 'SystemDrive') {
-			$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
-		}
-	
-		if (Test-Path -Path $webLogDirectory) {
-
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
-			
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webBindings -match 'ftp') {
+				$webType = 'FTPSVC'
 			}
-			
-		} elseif (Test-Path -Path $webLogRootDir) {
-			$webLogDirectory      = $webLogRootDir
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+	
+			$webSiteId       = 0
+			$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+			$webLogRootDir   = $webSite.LogFile	
+			$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
 
-			try { 
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webLogDirectory -match 'SystemDrive') {
+				$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
 			}
+	
+			if (Test-Path -Path $webLogDirectory) {
+
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
 			
-		} else {
-			$webLogDirectory      = 'Not found: ' + $webLogDirectory
-			$webLogDirLastChanged = 'Na'
-			$webLogDirCreated     = 'Na'
-			$webLogDirNoOfFiles   = [double]::Parse('0')
-			$webLogDirSizeMB      = [double]::Parse('0')
-		}
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} elseif (Test-Path -Path $webLogRootDir) {
+				$webLogDirectory      = $webLogRootDir
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+
+				try { 
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} else {
+				$webLogDirectory      = 'Not found: ' + $webLogDirectory
+				$webLogDirLastChanged = 'Na'
+				$webLogDirCreated     = 'Na'
+				$webLogDirNoOfFiles   = [double]::Parse('0')
+				$webLogDirSizeMB      = [double]::Parse('0')
+			}
 	 
-		$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
-		$logInfoHash.Add('SiteId', $webSiteId)  
-		$logInfoHash.Add('Status', $webSite.state)  
-		$logInfoHash.Add('SitePath', $webSite.physicalPath)
-		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate)
-		$logInfoHash.Add('TimeZone', $timeZone)
-		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
-		$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-		$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-		$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
-		$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
-		$null       = $webSitesAll.Add($logInfoObj)		
+			$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
+			$logInfoHash.Add('SiteId', $webSiteId)  
+			$logInfoHash.Add('Status', $webSite.state)  
+			$logInfoHash.Add('SitePath', $webSite.physicalPath)
+			$logInfoHash.Add('Bindings', $webBindings)
+			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('TimeZone', $timeZone)
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
+			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
+			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
+			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
+			$null       = $webSitesAll.Add($logInfoObj)		
 
-	} #End foreach ($webSite in $webSitesIIS)
+		} #End foreach ($webSite in $webSitesIIS)
 	
-	foreach ($wbSite in $webSitesAll) {
+		foreach ($wbSite in $webSitesAll) {
 		
-		$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
-		$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
-		$discoveryData.AddInstance($healthInstance)		
+			$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
+			$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
+			$discoveryData.AddInstance($healthInstance)		
 		
-		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
-		$key         = $Key -replace ' ','_'
-		$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
+			$Key         = $ComputerName + '-' + $($wbSite.SiteName)
+			$key         = $Key -replace ' ','_'
+			$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
 
-		$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
-		$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
-		$discoveryData.AddInstance($instance)	
+			$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
+			$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
+			$discoveryData.AddInstance($instance)	
 				
-		$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
-		$relHealthInstance.Source = $healthInstance
-		$relHealthInstance.Target = $instance									
-		$discoveryData.AddInstance($relHealthInstance)
+			$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
+			$relHealthInstance.Source = $healthInstance
+			$relHealthInstance.Target = $instance									
+			$discoveryData.AddInstance($relHealthInstance)
 		
-	} #End foreach ($wbSite in $webSitesAll)	
+		} #End foreach ($wbSite in $webSitesAll)	
+
+	} catch {
+
+		$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',201,1,"Computer: $($computerName) checking for $($discoveryItem) got errors. No Webadministration Module was found!")	
+
+	}	
 
 } elseIf ($discoveryItem -eq 'Apache') {
 
@@ -1303,143 +1918,151 @@ if (([string]::IsNullOrEmpty($computerDescription)) -or ([string]::IsNullOrWhite
 
 if ($discoveryItem -eq 'IIS') {
 
-	Import-Module -Name Webadministration
+	try {
+
+		Import-Module -Name Webadministration
 		
-	$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
-			@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
-			@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
+		$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
+				@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
+				@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
 
-	$webSitesAll = New-Object -TypeName System.Collections.ArrayList
+		$webSitesAll = New-Object -TypeName System.Collections.ArrayList
 
-	foreach ($webSite in $webSitesIIS) {
+		foreach ($webSite in $webSitesIIS) {
 
-		$webBindings = $webSite.Bindings 
+			$webBindings = $webSite.Bindings 
 
-		if ($webBindings -match 'http') {
-			$webType = 'W3SVC'
-		} 
+			if ($webBindings -match 'http') {
+				$webType = 'W3SVC'
+			} 
 
-		if ($webBindings -match 'ftp') {
-			$webType = 'FTPSVC'
-		}
-	
-		$webSiteId       = 0
-		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
-		$webLogRootDir   = $webSite.LogFile	
-		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
-
-		if ($webLogDirectory -match 'SystemDrive') {
-			$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
-		}
-	
-		if (Test-Path -Path $webLogDirectory) {
-
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
-			
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webBindings -match 'ftp') {
+				$webType = 'FTPSVC'
 			}
-			
-		} elseif (Test-Path -Path $webLogRootDir) {
-			$webLogDirectory      = $webLogRootDir
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+	
+			$webSiteId       = 0
+			$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+			$webLogRootDir   = $webSite.LogFile	
+			$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
 
-			try { 
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webLogDirectory -match 'SystemDrive') {
+				$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
 			}
+	
+			if (Test-Path -Path $webLogDirectory) {
+
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
 			
-		} else {
-			$webLogDirectory      = 'Not found: ' + $webLogDirectory
-			$webLogDirLastChanged = 'Na'
-			$webLogDirCreated     = 'Na'
-			$webLogDirNoOfFiles   = [double]::Parse('0')
-			$webLogDirSizeMB      = [double]::Parse('0')
-		}
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} elseif (Test-Path -Path $webLogRootDir) {
+				$webLogDirectory      = $webLogRootDir
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+
+				try { 
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} else {
+				$webLogDirectory      = 'Not found: ' + $webLogDirectory
+				$webLogDirLastChanged = 'Na'
+				$webLogDirCreated     = 'Na'
+				$webLogDirNoOfFiles   = [double]::Parse('0')
+				$webLogDirSizeMB      = [double]::Parse('0')
+			}
 	 
-		$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
-		$logInfoHash.Add('SiteId', $webSiteId)  
-		$logInfoHash.Add('Status', $webSite.state)  
-		$logInfoHash.Add('SitePath', $webSite.physicalPath)
-		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate)
-		$logInfoHash.Add('TimeZone', $timeZone)
-		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
-		$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-		$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-		$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
-		$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
-		$null       = $webSitesAll.Add($logInfoObj)		
+			$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
+			$logInfoHash.Add('SiteId', $webSiteId)  
+			$logInfoHash.Add('Status', $webSite.state)  
+			$logInfoHash.Add('SitePath', $webSite.physicalPath)
+			$logInfoHash.Add('Bindings', $webBindings)
+			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('TimeZone', $timeZone)
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
+			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
+			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
+			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
+			$null       = $webSitesAll.Add($logInfoObj)		
 
-	} #End foreach ($webSite in $webSitesIIS)
+		} #End foreach ($webSite in $webSitesIIS)
 	
-	foreach ($wbSite in $webSitesAll) {
+		foreach ($wbSite in $webSitesAll) {
 		
-		$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
-		$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
-		$discoveryData.AddInstance($healthInstance)		
+			$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
+			$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
+			$discoveryData.AddInstance($healthInstance)		
 		
-		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
-		$key         = $Key -replace ' ','_'
-		$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
+			$Key         = $ComputerName + '-' + $($wbSite.SiteName)
+			$key         = $Key -replace ' ','_'
+			$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
 
-		$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
-		$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
-		$discoveryData.AddInstance($instance)	
+			$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
+			$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
+			$discoveryData.AddInstance($instance)	
 				
-		$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
-		$relHealthInstance.Source = $healthInstance
-		$relHealthInstance.Target = $instance									
-		$discoveryData.AddInstance($relHealthInstance)
+			$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
+			$relHealthInstance.Source = $healthInstance
+			$relHealthInstance.Target = $instance									
+			$discoveryData.AddInstance($relHealthInstance)
 		
-	} #End foreach ($wbSite in $webSitesAll)	
+		} #End foreach ($wbSite in $webSitesAll)	
+
+	} catch {
+
+		$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',201,1,"Computer: $($computerName) checking for $($discoveryItem) got errors. No Webadministration Module was found!")	
+
+	}	
 
 } elseIf ($discoveryItem -eq 'Apache') {
 
@@ -1663,143 +2286,151 @@ if (([string]::IsNullOrEmpty($computerDescription)) -or ([string]::IsNullOrWhite
 
 if ($discoveryItem -eq 'IIS') {
 
-	Import-Module -Name Webadministration
+	try {
+
+		Import-Module -Name Webadministration
 		
-	$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
-			@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
-			@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
+		$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
+				@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
+				@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
 
-	$webSitesAll = New-Object -TypeName System.Collections.ArrayList
+		$webSitesAll = New-Object -TypeName System.Collections.ArrayList
 
-	foreach ($webSite in $webSitesIIS) {
+		foreach ($webSite in $webSitesIIS) {
 
-		$webBindings = $webSite.Bindings 
+			$webBindings = $webSite.Bindings 
 
-		if ($webBindings -match 'http') {
-			$webType = 'W3SVC'
-		} 
+			if ($webBindings -match 'http') {
+				$webType = 'W3SVC'
+			} 
 
-		if ($webBindings -match 'ftp') {
-			$webType = 'FTPSVC'
-		}
-	
-		$webSiteId       = 0
-		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
-		$webLogRootDir   = $webSite.LogFile	
-		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
-
-		if ($webLogDirectory -match 'SystemDrive') {
-			$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
-		}
-	
-		if (Test-Path -Path $webLogDirectory) {
-
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
-			
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webBindings -match 'ftp') {
+				$webType = 'FTPSVC'
 			}
-			
-		} elseif (Test-Path -Path $webLogRootDir) {
-			$webLogDirectory      = $webLogRootDir
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+	
+			$webSiteId       = 0
+			$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+			$webLogRootDir   = $webSite.LogFile	
+			$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
 
-			try { 
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webLogDirectory -match 'SystemDrive') {
+				$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
 			}
+	
+			if (Test-Path -Path $webLogDirectory) {
+
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 		
 			
-		} else {
-			$webLogDirectory      = 'Not found: ' + $webLogDirectory
-			$webLogDirLastChanged = 'Na'
-			$webLogDirCreated     = 'Na'
-			$webLogDirNoOfFiles   = [double]::Parse('0')
-			$webLogDirSizeMB      = [double]::Parse('0')
-		}
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} elseif (Test-Path -Path $webLogRootDir) {
+				$webLogDirectory      = $webLogRootDir
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+
+				try { 
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',200,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} else {
+				$webLogDirectory      = 'Not found: ' + $webLogDirectory
+				$webLogDirLastChanged = 'Na'
+				$webLogDirCreated     = 'Na'
+				$webLogDirNoOfFiles   = [double]::Parse('0')
+				$webLogDirSizeMB      = [double]::Parse('0')
+			}
 	 
-		$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
-		$logInfoHash.Add('SiteId', $webSiteId)  
-		$logInfoHash.Add('Status', $webSite.state)  
-		$logInfoHash.Add('SitePath', $webSite.physicalPath)
-		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate)
-		$logInfoHash.Add('TimeZone', $timeZone)
-		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
-		$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-		$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-		$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
-		$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
-		$null       = $webSitesAll.Add($logInfoObj)		
+			$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )') }
+			$logInfoHash.Add('SiteId', $webSiteId)  
+			$logInfoHash.Add('Status', $webSite.state)  
+			$logInfoHash.Add('SitePath', $webSite.physicalPath)
+			$logInfoHash.Add('Bindings', $webBindings)
+			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('TimeZone', $timeZone)
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
+			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
+			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
+			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
+			$null       = $webSitesAll.Add($logInfoObj)		
 
-	} #End foreach ($webSite in $webSitesIIS)
+		} #End foreach ($webSite in $webSitesIIS)
 	
-	foreach ($wbSite in $webSitesAll) {
+		foreach ($wbSite in $webSitesAll) {
 		
-		$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
-		$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
-		$discoveryData.AddInstance($healthInstance)		
+			$healthInstance = $discoveryData.CreateClassInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthService']$")		
+			$healthInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)			
+			$discoveryData.AddInstance($healthInstance)		
 		
-		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
-		$key         = $Key -replace ' ','_'
-		$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
+			$Key         = $ComputerName + '-' + $($wbSite.SiteName)
+			$key         = $Key -replace ' ','_'
+			$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName
 
-		$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
-		$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
-		$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
-		$discoveryData.AddInstance($instance)	
+			$instance = $discoveryData.CreateClassInstance("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']$")
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$",$ComputerName)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/WindowsVersion$",$WindowsVersion)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)					
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SitePath$",$wbSite.SitePath)	
+			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Key$",$Key)
+			$instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $displayName)
+			$discoveryData.AddInstance($instance)	
 				
-		$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
-		$relHealthInstance.Source = $healthInstance
-		$relHealthInstance.Target = $instance									
-		$discoveryData.AddInstance($relHealthInstance)
+			$relHealthInstance        = $discoveryData.CreateRelationShipInstance("$MPElement[Name='SC!Microsoft.SystemCenter.HealthServiceShouldManageEntity']$")
+			$relHealthInstance.Source = $healthInstance
+			$relHealthInstance.Target = $instance									
+			$discoveryData.AddInstance($relHealthInstance)
 		
-	} #End foreach ($wbSite in $webSitesAll)	
+		} #End foreach ($wbSite in $webSitesAll)	
+
+	} catch {
+
+		$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',201,1,"Computer: $($computerName) checking for $($discoveryItem) got errors. No Webadministration Module was found!")	
+
+	}	
 
 } elseIf ($discoveryItem -eq 'Apache') {
 
@@ -1983,6 +2614,72 @@ $discoveryData]]></ScriptBody>
           <TimeoutSeconds>300</TimeoutSeconds>
         </DataSource>
       </Discovery>
+      <Discovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS" Target="Windows!Microsoft.Windows.Server.Computer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>KeyExists</AttributeName>
+              <Path>System\CurrentControlSet\Services\IISAdmin</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>WindowsVersion</AttributeName>
+              <Path>SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProductName</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Description</AttributeName>
+              <Path>SYSTEM\CurrentControlSet\services\LanmanServer\Parameters\srvcomment</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>86400</Frequency>
+          <ClassId>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer"]/ComputerName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer"]/WindowsVersion$</Name>
+                <Value>$Data/Values/WindowsVersion$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Windows.Server.Webservice.LogdirectoryWatcher.Computer"]/Description$</Name>
+                <Value>$Data/Values/Description$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery>Values/KeyExists</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value>true</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
     </Discoveries>
     <Monitors>
       <UnitMonitor ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType" ConfirmDelivery="false">
@@ -2005,12 +2702,12 @@ $discoveryData]]></ScriptBody>
           <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>600</IntervalSeconds>
+          <IntervalSeconds>900</IntervalSeconds>
           <SyncTime />
           <MonitorItem>ApacheTomcat</MonitorItem>
           <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$</Key>
-          <WarningThresholdMegaBytes>2500</WarningThresholdMegaBytes>
-          <ErrorThresholdMegaBytes>5000</ErrorThresholdMegaBytes>
+          <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+          <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
         </Configuration>
       </UnitMonitor>
       <UnitMonitor ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType" ConfirmDelivery="false">
@@ -2033,12 +2730,12 @@ $discoveryData]]></ScriptBody>
           <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>600</IntervalSeconds>
+          <IntervalSeconds>900</IntervalSeconds>
           <SyncTime />
           <MonitorItem>IIS</MonitorItem>
           <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS"]/Key$</Key>
-          <WarningThresholdMegaBytes>2500</WarningThresholdMegaBytes>
-          <ErrorThresholdMegaBytes>5000</ErrorThresholdMegaBytes>
+          <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+          <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
         </Configuration>
       </UnitMonitor>
       <UnitMonitor ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType" ConfirmDelivery="false">
@@ -2061,17 +2758,165 @@ $discoveryData]]></ScriptBody>
           <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
         </OperationalStates>
         <Configuration>
-          <IntervalSeconds>600</IntervalSeconds>
+          <IntervalSeconds>900</IntervalSeconds>
           <SyncTime />
           <MonitorItem>Apache</MonitorItem>
           <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$</Key>
-          <WarningThresholdMegaBytes>2500</WarningThresholdMegaBytes>
-          <ErrorThresholdMegaBytes>5000</ErrorThresholdMegaBytes>
+          <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+          <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
         </Configuration>
       </UnitMonitor>
     </Monitors>
+    <Recoveries>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>ApacheTomcat</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>ApacheTomcat</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+    </Recoveries>
   </Monitoring>
   <Presentation>
+    <ConsoleTasks>
+      <ConsoleTask ID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" RequireOutput="false">
+        <Assembly>Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly</Assembly>
+        <Handler>ShellHandler</Handler>
+        <Parameters>
+          <Argument Name="WorkingDirectory" />
+          <Argument Name="Application">powershell.exe</Argument>
+          <Argument>-noprofile -Command "&amp; { <![CDATA[param([string]$ComputerName,[string]$LogDirPath)
+
+$LogDirPath | Out-File -FilePath  C:\errorCreatTasks.txt -Append
+
+$remoteLogs = $LogDirPath -replace ':','$'
+$remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
+
+& $env:windir\explorer.exe $($remoteURL) ]]> }"</Argument>
+          <Argument>"$Target/Property[Type='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$"</Argument>
+          <Argument>'"$Target/Property[Type='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$"'</Argument>
+        </Parameters>
+      </ConsoleTask>
+    </ConsoleTasks>
     <Views>
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
@@ -2094,24 +2939,32 @@ $discoveryData]]></ScriptBody>
           </ColumnInfo>
         </Presentation>
       </View>
-      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50">
-            <Name>State</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
             <Name>ComputerName</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName</Id>
           </ColumnInfo>
-          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
             <Name>WindowsVersion</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion</Id>
           </ColumnInfo>
-          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
+          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="320">
             <Name>Description</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+            <Name>TaskName</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/TaskName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+            <Name>TaskType</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/TaskType</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+            <Name>ScriptPath</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/ScriptPath</Id>
           </ColumnInfo>
         </Presentation>
       </View>
@@ -2271,6 +3124,27 @@ $discoveryData]]></ScriptBody>
           </ResolutionState>
         </Criteria>
       </View>
+      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Presentation>
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50">
+            <Name>State</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+            <Name>ComputerName</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+            <Name>WindowsVersion</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
+            <Name>Description</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description</Id>
+          </ColumnInfo>
+        </Presentation>
+      </View>
     </Views>
     <Folders>
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
@@ -2280,7 +3154,7 @@ $discoveryData]]></ScriptBody>
     </Folders>
     <FolderItems>
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers.FolderItem" />
-      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers.FolderItem" />
+      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites.FolderItem" />
@@ -2288,6 +3162,7 @@ $discoveryData]]></ScriptBody>
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites.FolderItem" />
+      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers.FolderItem" />
     </FolderItems>
     <StringResources>
       <StringResource ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat.AlertMessage" />
@@ -2298,9 +3173,57 @@ $discoveryData]]></ScriptBody>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Warning">
+          <Name>Create Scheduled-Task for IIS Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete IIS log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Error">
+          <Name>Create Scheduled-Task for IIS Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete IIS log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Warning">
+          <Name>Create Scheduled-Task for IIS Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Error">
+          <Name>Create Scheduled-Task for IIS Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Warning">
+          <Name>Create Scheduled-Task for Apache Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Error">
+          <Name>Create Scheduled-Task for Apache Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Warning">
+          <Name>Create Scheduled-Task for Apache Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Error">
+          <Name>Create Scheduled-Task for Apache Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Warning">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache Tomcat log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Error">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache Tomcat log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Warning">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Error">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
           <Name>Monitor LogDirectorySize ApacheTomcat</Name>
-          <Description>Description for the new unit monitor.</Description>
+          <Description>Monitors the size an ApacheTomcat web service - log folder.</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat.AlertMessage">
           <Name>ApacheTomcat WebSite's LogDirectory size limit reached</Name>
@@ -2330,7 +3253,7 @@ Windows Version: {3}</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
           <Name>Monitor LogDirectorySize IIS</Name>
-          <Description>Description for the new unit monitor.</Description>
+          <Description>Monitors the size an IIS web service - log folder.</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS.AlertMessage">
           <Name>IIS WebSite's LogDirectory size limit reached</Name>
@@ -2360,7 +3283,7 @@ Windows Version: {3}</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
           <Name>Monitor LogDirectorySize Apache</Name>
-          <Description>Description for the new unit monitor.</Description>
+          <Description>Monitors the size an Apache web service - log folder.</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache.AlertMessage">
           <Name>Apache WebSite's LogDirectory size limit reached</Name>
@@ -2388,6 +3311,10 @@ Windows Version: {3}</Description>
           <Name>OverErrorThreshold</Name>
           <Description>OverErrorThreshold</Description>
         </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask">
+          <Name>Open Log Directory</Name>
+          <Description></Description>
+        </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Folders">
           <Name>Windows.Server.Webservice.LogdirectoryWatcher</Name>
           <Description></Description>
@@ -2408,8 +3335,8 @@ Windows Version: {3}</Description>
           <Name>Computers - Apache Tomcat </Name>
           <Description>Description for the new view</Description>
         </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers">
-          <Name>Computers - IIS</Name>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers">
+          <Name>Computers - Managed By Task</Name>
           <Description>Description for the new view</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers">
@@ -2440,8 +3367,13 @@ Windows Version: {3}</Description>
           <Name>WebSites - ApacheTomcat</Name>
           <Description>Description for the new view</Description>
         </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers">
+          <Name>Computers - IIS</Name>
+          <Description>Description for the new view</Description>
+        </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher">
           <Name>Windows Server Webservice LogdirectoryWatcher</Name>
+          <Description>Discovers Webservice Log directories on Windows Servers, Alerts on thresholds and automatically deletes old logs ( disabled by default, partially customizable ) </Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer">
           <Name>Windows Server Webservice LogdirectoryWatcher Computer</Name>
@@ -2457,6 +3389,22 @@ Windows Version: {3}</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer" SubElementID="WindowsVersion">
           <Name>WindowsVersion</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask">
+          <Name>Windows Server Webservice LogdirectoryWatcher Computer ManagedByTask</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="TaskName">
+          <Name>Task Name</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="TaskType">
+          <Name>Task Type</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="ScriptPath">
+          <Name>Script Path</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS">
@@ -2571,8 +3519,8 @@ Windows Version: {3}</Description>
           <Name>Discovery Windows Server Webservice Computer Apache Tomcat</Name>
           <Description>Description for the new discovery.</Description>
         </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS">
-          <Name>Discovery Windows Server Webservice Computer IIS</Name>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ManagedByTask">
+          <Name>Discovery Windows Server Webservice Computer ManagedByTask</Name>
           <Description>Description for the new discovery.</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.Apache">
@@ -2591,8 +3539,15 @@ Windows Version: {3}</Description>
           <Name>Discovery Windows WebService WebSite ApacheTomcat</Name>
           <Description>Description for the new discovery.</Description>
         </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS">
+          <Name>Discovery Windows Server Webservice Computer IIS</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles></KnowledgeArticles>
     </LanguagePack>
   </LanguagePacks>
+  <Resources>
+    <Assembly ID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly" Accessibility="Public" FileName="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly.File" HasNullStream="true" QualifiedName="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly" />
+  </Resources>
 </ManagementPack>

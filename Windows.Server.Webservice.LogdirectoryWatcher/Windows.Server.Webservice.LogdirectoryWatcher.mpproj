@@ -24,7 +24,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DelaySigning>False</DelaySigning>
     <Company>ABC Community MP</Company>
-    <Copyright>Copyright (c) ABC-Community-MB. All rights reserved.</Copyright>
+    <Copyright>Copyright (c) ABC-Community-MP. All rights reserved.</Copyright>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>C:\Users\cn10504\Documents\TechnicalStuff\SystemCenter-OM\SCOM-SealingKey\ABCKey.snk</AssemblyOriginatorKeyFile>
     <GenerateSealed>True</GenerateSealed>
@@ -52,12 +52,18 @@
     </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Health Model\Recoveries.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Health Model\Modules.mpx">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Health Model\Monitors.mptg.mpx">
       <SubType>Code</SubType>
       <DependentUpon>Health Model\Monitors.mptg</DependentUpon>
+    </Compile>
+    <Compile Include="Health Model\Tasks\ConsoleTasks.mpx">
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="Presentation\Folders.mpx">
       <SubType>Code</SubType>
@@ -79,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Health Model" />
+    <Folder Include="Health Model\Tasks" />
     <Folder Include="Presentation" />
     <Folder Include="Service Model" />
     <Folder Include="Service Model\Classes" />
@@ -99,7 +106,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Health Model\LogdirectoryWatcher.Recovery.CompressLogs.ps1" />
     <EmbeddedResource Include="Health Model\MonitorLogDirectoryThreeState.ps1" />
+    <EmbeddedResource Include="Health Model\LogdirectoryWatcher.Recovery.DeleteLogs.ps1" />
+    <EmbeddedResource Include="Health Model\Tasks\ConsoleTaskScript.ps1" />
     <EmbeddedResource Include="Service Model\Discoveries\DiscoverLogDirectoryWatcheritems.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />

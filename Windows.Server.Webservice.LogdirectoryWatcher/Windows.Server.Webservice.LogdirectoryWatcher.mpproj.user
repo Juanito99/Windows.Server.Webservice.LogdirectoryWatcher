@@ -3,9 +3,10 @@
   <PropertyGroup>
     <DeploymentServerName>delinvmas147</DeploymentServerName>
     <DeploymentCredentials>AskForCredentials</DeploymentCredentials>
-    <DeploymentCookie>5248290801421457904</DeploymentCookie>
+    <DeploymentCookie>
+    </DeploymentCookie>
     <DeploymentAutoIncrementVersion>True</DeploymentAutoIncrementVersion>
-    <DeploymentNextVersion>1.0.0.135</DeploymentNextVersion>
+    <DeploymentNextVersion>1.0.0.329</DeploymentNextVersion>
     <DeploymentStartAction>DeployOnly</DeploymentStartAction>
     <DeploymentWebConsoleUrl />
     <DeploymentCommand />

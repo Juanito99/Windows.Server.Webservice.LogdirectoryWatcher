@@ -5,6 +5,7 @@
       <DisplayStrings>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher">
           <Name>Windows Server Webservice LogdirectoryWatcher</Name>
+          <Description>Discovers Webservice Log directories on Windows Servers, Alerts on thresholds and automatically deletes old logs ( disabled by default, partially customizable ) </Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

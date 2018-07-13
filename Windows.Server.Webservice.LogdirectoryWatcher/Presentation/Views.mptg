@@ -18,13 +18,13 @@
       <CustomViewConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <ViewFolder>Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information</ViewFolder>
         <ViewType>SC!Microsoft.SystemCenter.StateViewType</ViewType>
-        <ViewConfiguration>&lt;Presentation&gt;&lt;ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50"&gt;&lt;Name&gt;State&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120"&gt;&lt;Name&gt;ComputerName&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220"&gt;&lt;Name&gt;WindowsVersion&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420"&gt;&lt;Name&gt;Description&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;/Presentation&gt;</ViewConfiguration>
+        <ViewConfiguration>&lt;Presentation&gt;&lt;ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120"&gt;&lt;Name&gt;ComputerName&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220"&gt;&lt;Name&gt;WindowsVersion&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="320"&gt;&lt;Name&gt;Description&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220"&gt;&lt;Name&gt;TaskName&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/TaskName&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="4" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120"&gt;&lt;Name&gt;TaskType&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/TaskType&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="5" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220"&gt;&lt;Name&gt;ScriptPath&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask/ScriptPath&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;/Presentation&gt;</ViewConfiguration>
         <Visible>true</Visible>
         <Accessibility>Internal</Accessibility>
-        <Id>View.State.IIS.Computers</Id>
-        <DisplayName>Computers - IIS</DisplayName>
+        <Id>View.State.MangedByTask.Computers</Id>
+        <DisplayName>Computers - Managed By Task</DisplayName>
         <Description>Description for the new view</Description>
-        <Target>Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS</Target>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask</Target>
         <Category>Operations</Category>
       </CustomViewConfig>
     </Instance>
@@ -123,6 +123,20 @@
         <DisplayName>WebSites - ApacheTomcat</DisplayName>
         <Description>Description for the new view</Description>
         <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat</Target>
+        <Category>Operations</Category>
+      </CustomViewConfig>
+    </Instance>
+    <Instance ID="Instance7af130ed31974ec9bba0b39febadd800" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.CustomView" Version="1.0.0.0">
+      <CustomViewConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <ViewFolder>Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information</ViewFolder>
+        <ViewType>SC!Microsoft.SystemCenter.StateViewType</ViewType>
+        <ViewConfiguration>&lt;Presentation&gt;&lt;ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50"&gt;&lt;Name&gt;State&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120"&gt;&lt;Name&gt;ComputerName&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220"&gt;&lt;Name&gt;WindowsVersion&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420"&gt;&lt;Name&gt;Description&lt;/Name&gt;&lt;Id&gt;Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description&lt;/Id&gt;&lt;/ColumnInfo&gt;&lt;/Presentation&gt;</ViewConfiguration>
+        <Visible>true</Visible>
+        <Accessibility>Internal</Accessibility>
+        <Id>View.State.IIS.Computers</Id>
+        <DisplayName>Computers - IIS</DisplayName>
+        <Description>Description for the new view</Description>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS</Target>
         <Category>Operations</Category>
       </CustomViewConfig>
     </Instance>

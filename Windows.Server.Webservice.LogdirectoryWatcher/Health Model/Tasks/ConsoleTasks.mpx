@@ -1,0 +1,43 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  
+  <Categories>
+    <Category ID ="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTaskCategory"  Target="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask" Value ="System!System.Internal.ManagementPack.ConsoleTasks.MonitoringObject"/>
+  </Categories>
+  
+  <Presentation>    
+    <ConsoleTasks>
+      
+      <ConsoleTask ID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" RequireOutput="false">
+        <Assembly>Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly</Assembly>
+        <Handler>ShellHandler</Handler>        
+        <Parameters>
+          <Argument Name="WorkingDirectory" />
+          <Argument Name="Application">powershell.exe</Argument>        
+          <Argument><![CDATA[-noprofile -Command "& { $IncludeFileContent/Health Model/Tasks/ConsoleTaskScript.ps1$ }"]]></Argument>
+          <Argument>"$Target/Property[Type='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerName$"</Argument>          
+          <Argument>'"$Target/Property[Type='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$"'</Argument>         
+        </Parameters>
+      </ConsoleTask>
+      
+    </ConsoleTasks>
+ 
+
+  </Presentation>
+  
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask">
+          <Name>Open Log Directory</Name>
+          <Description></Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+  
+  <Resources>
+    <Assembly ID ="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly" Accessibility="Public" FileName ="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly.File" HasNullStream ="true" QualifiedName ="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly" />
+  </Resources>
+
+  
+</ManagementPackFragment>

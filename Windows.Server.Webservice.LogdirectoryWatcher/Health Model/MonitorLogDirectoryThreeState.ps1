@@ -75,120 +75,128 @@ Function Send-PropertyBag {
 
 if ($MonitorItem -eq 'IIS') {
 
-	Import-Module -Name Webadministration
+	try {
+
+		Import-Module -Name Webadministration
 		
-	$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
-			@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
-			@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
+		$webSitesIIS   = Get-Website | Select-Object -Property name, id, state, physicalpath, 
+				@{Name = "Bindings"; Expression = { ($_.bindings | Select-Object -ExpandProperty collection) -join ';' }} , 
+				@{Name = "LogFile"; Expression = { $_.logfile | Select-Object -ExpandProperty directory }} 
 
-	$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',301,4,"Found IIS Websites No: $($webSitesIIS.count)")	
+		$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',301,4,"Found IIS Websites No: $($webSitesIIS.count)")	
 
-	$webSitesAll = New-Object -TypeName System.Collections.ArrayList
+		$webSitesAll = New-Object -TypeName System.Collections.ArrayList
 
-	foreach ($webSite in $webSitesIIS) {
+		foreach ($webSite in $webSitesIIS) {
 
-		$webBindings = $webSite.Bindings 
+			$webBindings = $webSite.Bindings 
 
-		if ($webBindings -match 'http') {
-			$webType = 'W3SVC'
-		} 
+			if ($webBindings -match 'http') {
+				$webType = 'W3SVC'
+			} 
 
-		if ($webBindings -match 'ftp') {
-			$webType = 'FTPSVC'
-		}
-	
-		$webSiteId       = 0
-		$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
-		$webLogRootDir   = $webSite.LogFile		
-		$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
-
-		if ($webLogDirectory -match 'SystemDrive') {
-			$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
-		} 
-		
-		if (Test-Path -Path $webLogDirectory) {
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-		    
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
-			}			
-
-		} elseif (Test-Path -Path $webLogRootDir) {
-
-			$webLogDirectory      = $webLogRootDir
-			$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
-			$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
-			
-			try {
-				$rawLogDirNoOfFiles   = 0	
-				$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
-				$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
-
-				$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
-				$doubleLogDirSize     = $rawLogDirSize -as [double]
-				$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
-			} catch {
-				$rawLogDirNoOfFiles   = 0	
-				$webLogDirSizeMB      = 0
-				
-				$exceptionFullName    = $_.Exception.GetType().FullName
-				$exceptionMessage     = $_.Exception.Message
-
-				$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+			if ($webBindings -match 'ftp') {
+				$webType = 'FTPSVC'
 			}
+	
+			$webSiteId       = 0
+			$null            = [double]::TryParse($webSite.id,[ref]$webSiteId)
+			$webLogRootDir   = $webSite.LogFile		
+			$webLogDirectory = $webSite.LogFile + '\' + $webType + $webSiteId
+
+			if ($webLogDirectory -match 'SystemDrive') {
+				$webLogDirectory = $webLogDirectory -replace '%SystemDrive%','C:'
+			} 
+		
+			if (Test-Path -Path $webLogDirectory) {
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+		    
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
+
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}			
+
+			} elseif (Test-Path -Path $webLogRootDir) {
+
+				$webLogDirectory      = $webLogRootDir
+				$webLogDirTmp         = Get-Item -Path $webLogDirectory | Select-Object -Property Name, LastWriteTime, CreationTime
+				$webLogDirLastChanged = $webLogDirTmp | Select-Object -ExpandProperty LastWriteTime | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
+				$webLogDirCreated     = $webLogDirTmp | Select-Object -ExpandProperty CreationTime  | Get-Date -Format 'yyyy-MM-dd hh:MM:ss' 
 			
-		} else {
-			$webLogDirectory      = 'Not found: ' + $webLogDirectory
-			$webLogDirLastChanged = 'Na'
-			$webLogDirCreated     = 'Na'
-			$webLogDirNoOfFiles   = [double]::Parse('0')
-			$webLogDirSizeMB      = [double]::Parse('0')
-		}
-	
-		$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )')}
-		$logInfoHash.Add('SiteId', $webSiteId)  
-		$logInfoHash.Add('Status', $webSite.state)  
-		$logInfoHash.Add('SitePath', $webSite.physicalPath)
-		$logInfoHash.Add('Bindings', $webBindings)
-		$logInfoHash.Add('LogDirScanDate', $scanDate) 
-		$logInfoHash.Add('TimeZone', $timeZone)
-		$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-		$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
-		$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-		$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-		$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
-		$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
-		$null       = $webSitesAll.Add($logInfoObj)		
+				try {
+					$rawLogDirNoOfFiles   = 0	
+					$rawLogDirNoOfFiles   = (Get-ChildItem -Path $webLogDirectory).Count
+					$webLogDirNoOfFiles   = $rawLogDirNoOfFiles -as [double]
 
-	} 
+					$rawLogDirSize        = (Get-ChildItem -Path $webLogDirectory | Measure-Object -property length -sum).Sum / 1MB
+					$doubleLogDirSize     = $rawLogDirSize -as [double]
+					$webLogDirSizeMB      = [Math]::Round($doubleLogDirSize, 1)
+				} catch {
+					$rawLogDirNoOfFiles   = 0	
+					$webLogDirSizeMB      = 0
+				
+					$exceptionFullName    = $_.Exception.GetType().FullName
+					$exceptionMessage     = $_.Exception.Message
+
+					$api.LogScriptEvent('MonitorLogDirectoryThreeState.ps1',300,1,"Computer: $($computerName) checking for unconsidered $($discoveryItem) got errors for rawSize: $($doubleLogDirSize). `n $($exceptionFullName) `n $($exceptionMessage)")	
+				}
+			
+			} else {
+				$webLogDirectory      = 'Not found: ' + $webLogDirectory
+				$webLogDirLastChanged = 'Na'
+				$webLogDirCreated     = 'Na'
+				$webLogDirNoOfFiles   = [double]::Parse('0')
+				$webLogDirSizeMB      = [double]::Parse('0')
+			}
+	
+			$logInfoHash = @{'SiteName' = ($webSite.name + ' ( ' + $webSite.state + ' )')}
+			$logInfoHash.Add('SiteId', $webSiteId)  
+			$logInfoHash.Add('Status', $webSite.state)  
+			$logInfoHash.Add('SitePath', $webSite.physicalPath)
+			$logInfoHash.Add('Bindings', $webBindings)
+			$logInfoHash.Add('LogDirScanDate', $scanDate) 
+			$logInfoHash.Add('TimeZone', $timeZone)
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
+			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
+			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
+			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
+			$null       = $webSitesAll.Add($logInfoObj)		
+
+		} 
 	 
-	foreach ($wbSite in $webSitesAll) {
+		foreach ($wbSite in $webSitesAll) {
 						
-		$Key         = $ComputerName + '-' + $($wbSite.SiteName)
-		$Key         = $Key -replace ' ','_'
-		$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName		
+			$Key         = $ComputerName + '-' + $($wbSite.SiteName)
+			$Key         = $Key -replace ' ','_'
+			$displayName = 'IISWebSite ' + $($wbSite.SiteName) + ' On ' + $ComputerName		
 	
-		Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $wbSite.LogDirSizeInMB -logDirPath $wbSite.LogDirPath `
-						 -logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+			Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $wbSite.LogDirSizeInMB -logDirPath $wbSite.LogDirPath `
+							 -logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
 
-	} 
+		} 
+
+	} catch {
+
+		$api.LogScriptEvent('DiscoverLogDirectoryWachterItmes.ps1',201,1,"Computer: $($computerName) checking for $($discoveryItem) got errors. No Webadministration Module was found!")	
+
+	}	
 
 } elseIf ($MonitorItem -eq 'Apache') {
 
@@ -240,8 +248,8 @@ if ($MonitorItem -eq 'IIS') {
 	$Key         = $ComputerName + '-' + 'ApacheWebSite'
 	$displayName = 'ApacheWebSite ' + ' On ' + $ComputerName			
 	
-	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $wbSite.LogDirPath `
-						-logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $apacheLogDirectory `
+						-logDirModifiedDate $webLogDirLastChanged  -logDirNoOfFiles $webLogDirNoOfFiles
 	
 } elseIf ($MonitorItem -eq 'ApacheTomcat') {
 
@@ -292,8 +300,8 @@ if ($MonitorItem -eq 'IIS') {
 	$Key         = $ComputerName + '-' + 'ApacheTomcatWebSite'
 	$displayName = 'ApacheTomcatWebSite ' + ' On ' + $ComputerName
 		
-	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $wbSite.LogDirPath `
-						-logDirModifiedDate $wbSite.LogDirModifiedDate  -logDirNoOfFiles $wbSite.LogDirNoOfFiles 		
+	Send-PropertyBag -Key $Key -supplement $supplement -logDirSize $webLogDirSizeMB -logDirPath $apacheLogDirectory `
+						-logDirModifiedDate $webLogDirLastChanged  -logDirNoOfFiles $webLogDirNoOfFiles 		
 
 } else {
 

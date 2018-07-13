@@ -1,0 +1,338 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+      
+      <WriteActionModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="LogDirectory" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebServerType" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysToKeepLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScheduledTasksFolder" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="DaysToKeepLogs" Selector="$Config/DaysToKeepLogs$" ParameterType="int" />
+          <OverrideableParameter ID="ScheduledTasksFolder" Selector="$Config/ScheduledTasksFolder$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="PowerShellWriteAction" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>LogdirectoryWatcher.Recovery.DeleteLogs.ps1</ScriptName>
+                <ScriptBody>$IncludeFileContent/Health Model/LogdirectoryWatcher.Recovery.DeleteLogs.ps1$</ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>logDirectory</Name>
+                    <Value>$Config/LogDirectory$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>webServerType</Name>
+                    <Value>$Config/WebServerType$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>daysToKeepLogs</Name>
+                    <Value>$Config/DaysToKeepLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>scheduledTasksFolder</Name>
+                    <Value>$Config/ScheduledTasksFolder$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PowerShellWriteAction" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Windows!Microsoft.Windows.SerializedObjectData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+
+      <WriteActionModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="LogDirectory" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WebServerType" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysBeforeCompressLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DaysBeforeDeleteCompressedLogs" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />          
+          <xsd:element name="ScheduledTasksFolder" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="DaysBeforeCompressLogs" Selector="$Config/DaysBeforeCompressLogs$" ParameterType="int" />
+          <OverrideableParameter ID="DaysBeforeDeleteCompressedLogs" Selector="$Config/DaysBeforeDeleteCompressedLogs$" ParameterType="int" />          
+          <OverrideableParameter ID="ScheduledTasksFolder" Selector="$Config/ScheduledTasksFolder$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="PowerShellWriteAction" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>LogdirectoryWatcher.Recovery.CompressLogs.ps1</ScriptName>
+                <ScriptBody>$IncludeFileContent/Health Model/LogdirectoryWatcher.Recovery.CompressLogs.ps1$</ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>logDirectory</Name>
+                    <Value>$Config/LogDirectory$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>webServerType</Name>
+                    <Value>$Config/WebServerType$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>DaysBeforeDeleteCompressedLogs</Name>
+                    <Value>$Config/DaysBeforeDeleteCompressedLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>DaysBeforeCompressLogs</Name>
+                    <Value>$Config/DaysBeforeCompressLogs$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>scheduledTasksFolder</Name>
+                    <Value>$Config/ScheduledTasksFolder$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PowerShellWriteAction" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Windows!Microsoft.Windows.SerializedObjectData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+      
+      
+    </ModuleTypes>
+  </TypeDefinitions>
+  
+  <Monitoring>
+    
+    <Recoveries>
+      
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>    
+      
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>IIS</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>           
+
+      
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>ApacheTomcat</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>ApacheTomcat</WebServerType>
+          <DaysToKeepLogs>8</DaysToKeepLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Warning" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Warning" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Error" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Accessibility="Public" Enabled="false" ExecuteOnState="Error" ResetMonitor="true" Monitor="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat">
+        <Category>Custom</Category>
+        <WriteAction ID="Script" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction">
+          <LogDirectory>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base"]/LogDirPath$</LogDirectory>
+          <WebServerType>Apache</WebServerType>
+          <DaysBeforeCompressLogs>8</DaysBeforeCompressLogs>
+          <DaysBeforeDeleteCompressedLogs>15</DaysBeforeDeleteCompressedLogs>
+          <ScheduledTasksFolder>"C:\ScheduledTasks"</ScheduledTasksFolder>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+    </Recoveries>
+    
+  </Monitoring>
+
+
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Warning">
+          <Name>Create Scheduled-Task for IIS Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete IIS log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.IIS.Error">
+          <Name>Create Scheduled-Task for IIS Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete IIS log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Warning">
+          <Name>Create Scheduled-Task for IIS Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.IIS.Error">
+          <Name>Create Scheduled-Task for IIS Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
+
+        
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Warning">
+          <Name>Create Scheduled-Task for Apache Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.Apache.Error">
+          <Name>Create Scheduled-Task for Apache Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Warning">
+          <Name>Create Scheduled-Task for Apache Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.Apache.Error">
+          <Name>Create Scheduled-Task for Apache Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
+
+        
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Warning">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Deletion - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache Tomcat log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Error">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Deletion - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to delete Apache Tomcat log files older than N days. - Default are 7 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Warning">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Compression ( + Deletion ) - On Warning (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 8 and delete compressed after 15 days.</Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Error">
+          <Name>Create Scheduled-Task for ApacheTomcat Log Compression ( + Deletion ) - On Error (requires override to be enabled)</Name>
+          <Description>Schedules a PowerShell script to compress and delete IIS log files older than N days. - Defaults: Compress after 4 and delete compressed after 8 days.</Description>
+        </DisplayString>
+
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+
+</ManagementPackFragment>

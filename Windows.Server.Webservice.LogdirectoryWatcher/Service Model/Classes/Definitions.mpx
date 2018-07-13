@@ -11,8 +11,15 @@
 
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS"  Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache"  Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
-        <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat"  Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />           
+        <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat"  Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
+
+        <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" Base="Windows.Server.Webservice.LogdirectoryWatcher.Computer" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="TaskName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
+          <Property ID="TaskType" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
+          <Property ID="ScriptPath" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />          
+        </ClassType>   
         
+          
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" Accessibility="Public" Abstract="true" Base="System!System.LogicalEntity" Hosted="false" Singleton="false" Extension="false">
           <Property ID="ComputerName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="WindowsVersion" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
@@ -71,6 +78,26 @@
           <Name>WindowsVersion</Name>
           <Description></Description>
         </DisplayString>        
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask">
+          <Name>Windows Server Webservice LogdirectoryWatcher Computer ManagedByTask</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="TaskName">
+          <Name>Task Name</Name>
+          <Description></Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="TaskType">
+          <Name>Task Type</Name>
+          <Description></Description>
+        </DisplayString>
+        
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask" SubElementID="ScriptPath">
+          <Name>Script Path</Name>
+          <Description></Description>
+        </DisplayString>
 
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS">
           <Name>Windows Server Webservice LogdirectoryWatcher Computer IIS</Name>
