@@ -33,7 +33,7 @@ This Management Pack discovers log-folders and raises alerts based on thresholds
 
 [ManagementPack-UnSealed](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/blob/master/Windows.Server.Webservice.LogdirectoryWatcher/bin/Release/Windows.Server.Webservice.LogdirectoryWatcher.xml) 
 
-[Source for VSAE 2017](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/tree/master/Windows.Server.Webservice.LogdirectoryWatcher/Windows.Server.Webservice.LogdirectoryWatcher)
+[Source for VSAE 2017](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/tree/master/Windows.Server.Webservice.LogdirectoryWatcher)
 
 
 
