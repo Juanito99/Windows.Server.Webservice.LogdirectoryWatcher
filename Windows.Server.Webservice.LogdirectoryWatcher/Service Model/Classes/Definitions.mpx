@@ -26,11 +26,7 @@
           <Property ID="ComputerDescription" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="TimeZone" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />          
           <Property ID="LogDirPath" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirCreationDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirModifiedDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirScanDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirSizeInMB" Type="double" AutoIncrement="false" Key="false" CaseSensitive="false" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirNoOfFiles" Type="double" AutoIncrement="false" Key="false" CaseSensitive="false" MinLength="0" Required="false" Scale="0" />
+          <Property ID="LogDirCreationDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />          
         </ClassType>
 
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Abstract="false" Base="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" Hosted="false" Singleton="false" Extension="false">
@@ -139,31 +135,11 @@
           <Description></Description>
         </DisplayString>
 
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirModifiedDate">
-          <Name>LogDirModifiedDate</Name>
-          <Description></Description>
-        </DisplayString>
-
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirNoOfFiles">
-          <Name>LogDirNoOfFiles</Name>
-          <Description></Description>
-        </DisplayString>
-
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirPath">
           <Name>LogDirPath</Name>
           <Description></Description>
-        </DisplayString>
+        </DisplayString>        
         
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirScanDate">
-          <Name>LogDirScanDate</Name>
-          <Description></Description>
-        </DisplayString>
-
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirSizeInMB">
-          <Name>LogDirSizeInMB</Name>
-          <Description></Description>
-        </DisplayString>
-
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="TimeZone">
           <Name>TimeZone</Name>
           <Description></Description>

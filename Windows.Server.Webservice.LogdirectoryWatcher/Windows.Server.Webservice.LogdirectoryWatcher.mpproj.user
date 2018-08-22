@@ -1,12 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <DeploymentServerName>delinvmas147</DeploymentServerName>
+    <DeploymentServerName>delinvmas582</DeploymentServerName>
     <DeploymentCredentials>AskForCredentials</DeploymentCredentials>
-    <DeploymentCookie>
-    </DeploymentCookie>
+    <DeploymentCookie>5248389441775707904</DeploymentCookie>
     <DeploymentAutoIncrementVersion>True</DeploymentAutoIncrementVersion>
-    <DeploymentNextVersion>1.0.0.329</DeploymentNextVersion>
+    <DeploymentNextVersion>1.0.0.353</DeploymentNextVersion>
     <DeploymentStartAction>DeployOnly</DeploymentStartAction>
     <DeploymentWebConsoleUrl />
     <DeploymentCommand />

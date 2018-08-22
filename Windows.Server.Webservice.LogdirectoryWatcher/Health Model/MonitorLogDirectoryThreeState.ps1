@@ -67,6 +67,7 @@ Function Send-PropertyBag {
 	$bag.AddValue("testedAt",$testedAt)
 	$bag.AddValue("Supplement",$supplement)
 	$bag.AddValue("WindowsVersion",$WindowsVersion)
+	$bag.AddValue("LogDirSize",$logDirSize)
 	$bag.AddValue("ComputerDescription",$computerDescription)
 	$bag
 

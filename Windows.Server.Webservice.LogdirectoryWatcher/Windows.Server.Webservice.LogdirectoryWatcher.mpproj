@@ -30,6 +30,12 @@
     <GenerateSealed>True</GenerateSealed>
   </PropertyGroup>
   <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.DataWarehouse.Library">
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\Microsoft.SystemCenter.DataWarehouse.Library.mp</HintPath>
+      <Alias>MSDL</Alias>
+      <MinVersion>7.1.10226.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
       <Alias>SC</Alias>
       <PackageToBundle>false</PackageToBundle>
@@ -50,6 +56,12 @@
       <Alias>Visualization</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
+    <ManagementPackReference Include="System.Performance.Library">
+      <HintPath>C:\Program Files (x86)\System Center Visual Studio Authoring Extensions\References\OM2012R2\System.Performance.Library.mp</HintPath>
+      <Alias>Perf</Alias>
+      <MinVersion>7.0.8433.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Health Model\Recoveries.mpx">
@@ -61,6 +73,10 @@
     <Compile Include="Health Model\Monitors.mptg.mpx">
       <SubType>Code</SubType>
       <DependentUpon>Health Model\Monitors.mptg</DependentUpon>
+    </Compile>
+    <Compile Include="Health Model\Rules.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>Health Model\Rules.mptg</DependentUpon>
     </Compile>
     <Compile Include="Health Model\Tasks\ConsoleTasks.mpx">
       <SubType>Code</SubType>
@@ -93,6 +109,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Health Model\Monitors.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
+    <Content Include="Health Model\Rules.mptg">
       <SubType>Content</SubType>
       <Generator>FragmentGenerator</Generator>
     </Content>

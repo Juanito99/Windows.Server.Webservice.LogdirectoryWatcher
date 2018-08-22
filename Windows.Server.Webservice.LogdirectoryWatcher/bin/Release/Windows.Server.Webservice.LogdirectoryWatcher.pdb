@@ -4,16 +4,17 @@ Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatc
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat*14*10*ClassType
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*16*10*ClassType
 Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*23*10*ClassType
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*36*10*ClassType
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*44*10*ClassType
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache*51*10*ClassType
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat*52*10*ClassType
-Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered*6*8*DataSourceModuleType
-Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag*58*8*DataSourceModuleType
-Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Probe*98*8*ProbeActionModuleType
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*32*10*ClassType
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*40*10*ClassType
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache*47*10*ClassType
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat*48*10*ClassType
+Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered*6*8*DataSourceModuleType
+Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered*50*8*DataSourceModuleType
+Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag*102*8*DataSourceModuleType
+Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Probe*142*8*ProbeActionModuleType
 Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.PowerShellWriteAction*5*8*WriteActionModuleType
 Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.PowerShellWriteAction*57*8*WriteActionModuleType
-Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType*141*8*UnitMonitorType
+Health Model\Modules.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType*185*8*UnitMonitorType
 Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTaskCategory*4*6*Category
 Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ApacheTomcat*6*8*Discovery
 Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ManagedByTask*127*8*Discovery
@@ -22,6 +23,9 @@ Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.Logdire
 Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.IIS*376*8*Discovery
 Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.ApacheTomcat*408*8*Discovery
 Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS*440*8*Discovery
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.Apache*6*8*Rule
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.ApacheTomcat*23*8*Rule
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.IIS*40*8*Rule
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat*6*8*UnitMonitor
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS*34*8*UnitMonitor
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache*62*8*UnitMonitor
@@ -37,31 +41,38 @@ Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recove
 Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recovery.DeleteLogs.ApacheTomcat.Error*228*8*Recovery
 Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Warning*239*8*Recovery
 Health Model\Recoveries.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Recovery.CompressLogs.ApacheTomcat.Error*251*8*Recovery
-Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask*9*8*ConsoleTask
+Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask*10*8*ConsoleTask
 Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers*6*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers*27*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers*56*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites*77*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites*114*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites*151*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites*188*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites*196*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites*204*8*View
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers*212*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers*23*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers*52*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites*69*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites*98*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites*127*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites*156*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites*164*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites*172*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers*180*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize*197*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize*200*8*View
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize*203*8*View
 Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders*5*8*Folder
 Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information*7*8*Folder
 Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState*9*8*Folder
 Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts*11*8*Folder
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers.FolderItem*235*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers.FolderItem*236*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers.FolderItem*237*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites.FolderItem*238*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites.FolderItem*239*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites.FolderItem*240*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites.FolderItem*241*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites.FolderItem*242*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites.FolderItem*243*8*FolderItem
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers.FolderItem*244*8*FolderItem
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance*13*8*Folder
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers.FolderItem*208*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers.FolderItem*209*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers.FolderItem*210*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites.FolderItem*211*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites.FolderItem*212*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites.FolderItem*213*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites.FolderItem*214*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites.FolderItem*215*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites.FolderItem*216*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers.FolderItem*217*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize.FolderItem*218*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize.FolderItem*219*8*FolderItem
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize.FolderItem*220*8*FolderItem
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat.AlertMessage*94*8*StringResource
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.IIS.AlertMessage*95*8*StringResource
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache.AlertMessage*96*8*StringResource
@@ -92,62 +103,65 @@ Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Mon
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache*180*10*DisplayString*SubElementID*UnderThreshold
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache*184*10*DisplayString*SubElementID*OverWarningThreshold
 Health Model\Monitors.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.Apache*188*10*DisplayString*SubElementID*OverErrorThreshold
-Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask*28*10*DisplayString
-Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders*19*10*DisplayString
-Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information*24*10*DisplayString
-Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState*29*10*DisplayString
-Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts*34*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers*250*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers*254*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers*258*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites*262*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites*266*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites*270*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites*274*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites*278*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites*282*10*DisplayString
-Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers*286*10*DisplayString
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.Apache*62*10*DisplayString
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.ApacheTomcat*66*10*DisplayString
+Health Model\Rules.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.IIS*70*10*DisplayString
+Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask*30*10*DisplayString
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders*22*10*DisplayString
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information*27*10*DisplayString
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState*32*10*DisplayString
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts*37*10*DisplayString
+Presentation\Folders.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance*42*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers*226*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.MangedByTask.Computers*230*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers*234*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites*238*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites*242*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites*246*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.Apache.WebSites*250*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites*254*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites*258*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers*262*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize*266*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize*270*10*DisplayString
+Presentation\Views.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize*274*10*DisplayString
 Project.mpx*Windows.Server.Webservice.LogdirectoryWatcher*6*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*62*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*67*10*DisplayString*SubElementID*ComputerName
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*72*10*DisplayString*SubElementID*Description
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*77*10*DisplayString*SubElementID*WindowsVersion
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*82*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*87*10*DisplayString*SubElementID*TaskName
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*92*10*DisplayString*SubElementID*TaskType
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*97*10*DisplayString*SubElementID*ScriptPath
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS*102*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache*107*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat*112*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*117*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*122*10*DisplayString*SubElementID*ComputerName
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*127*10*DisplayString*SubElementID*WindowsVersion
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*132*10*DisplayString*SubElementID*ComputerDescription
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*137*10*DisplayString*SubElementID*LogDirCreationDate
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*142*10*DisplayString*SubElementID*LogDirModifiedDate
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*147*10*DisplayString*SubElementID*LogDirNoOfFiles
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*152*10*DisplayString*SubElementID*LogDirPath
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*157*10*DisplayString*SubElementID*LogDirScanDate
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*162*10*DisplayString*SubElementID*LogDirSizeInMB
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*167*10*DisplayString*SubElementID*TimeZone
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*172*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*177*10*DisplayString*SubElementID*SvcDescription
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*182*10*DisplayString*SubElementID*SvcDisplayName
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*187*10*DisplayString*SubElementID*SvcVersion
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*192*10*DisplayString*SubElementID*Key
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache*198*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat*203*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*208*10*DisplayString
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*213*10*DisplayString*SubElementID*Bindings
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*218*10*DisplayString*SubElementID*SiteId
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*223*10*DisplayString*SubElementID*SiteName
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*228*10*DisplayString*SubElementID*SitePath
-Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*233*10*DisplayString*SubElementID*Key
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ApacheTomcat*511*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ManagedByTask*515*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.Apache*519*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.Apache*523*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.IIS*527*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.ApacheTomcat*531*10*DisplayString
-Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS*535*10*DisplayString
-Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly*37*6*Assembly
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*58*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*63*10*DisplayString*SubElementID*ComputerName
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*68*10*DisplayString*SubElementID*Description
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer*73*10*DisplayString*SubElementID*WindowsVersion
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*78*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*83*10*DisplayString*SubElementID*TaskName
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*88*10*DisplayString*SubElementID*TaskType
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ManagedByTask*93*10*DisplayString*SubElementID*ScriptPath
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS*98*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache*103*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat*108*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*113*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*118*10*DisplayString*SubElementID*ComputerName
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*123*10*DisplayString*SubElementID*WindowsVersion
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*128*10*DisplayString*SubElementID*ComputerDescription
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*133*10*DisplayString*SubElementID*LogDirCreationDate
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*138*10*DisplayString*SubElementID*LogDirPath
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base*143*10*DisplayString*SubElementID*TimeZone
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*148*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*153*10*DisplayString*SubElementID*SvcDescription
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*158*10*DisplayString*SubElementID*SvcDisplayName
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*163*10*DisplayString*SubElementID*SvcVersion
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase*168*10*DisplayString*SubElementID*Key
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache*174*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat*179*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*184*10*DisplayString
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*189*10*DisplayString*SubElementID*Bindings
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*194*10*DisplayString*SubElementID*SiteId
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*199*10*DisplayString*SubElementID*SiteName
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*204*10*DisplayString*SubElementID*SitePath
+Service Model\Classes\Definitions.mpx*Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS*209*10*DisplayString*SubElementID*Key
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ApacheTomcat*532*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.ManagedByTask*536*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.Apache*540*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.Apache*544*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.IIS*548*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.WebService.WebSite.ApacheTomcat*552*10*DisplayString
+Service Model\Discoveries\Discoveries.mptg.mpx*Windows.Server.Webservice.LogdirectoryWatcher.Discovery.Windows.Server.Webservice.Computer.IIS*556*10*DisplayString
+Health Model\Tasks\ConsoleTasks.mpx*Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.Assembly*39*6*Assembly

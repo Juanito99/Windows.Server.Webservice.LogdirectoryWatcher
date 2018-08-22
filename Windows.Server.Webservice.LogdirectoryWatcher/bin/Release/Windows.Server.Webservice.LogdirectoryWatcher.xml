@@ -3,10 +3,15 @@
   <Manifest>
     <Identity>
       <ID>Windows.Server.Webservice.LogdirectoryWatcher</ID>
-      <Version>1.0.0.329</Version>
+      <Version>1.0.0.352</Version>
     </Identity>
     <Name>Windows.Server.Webservice.LogdirectoryWatcher</Name>
     <References>
+      <Reference Alias="MSDL">
+        <ID>Microsoft.SystemCenter.DataWarehouse.Library</ID>
+        <Version>7.1.10226.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
       <Reference Alias="SC">
         <ID>Microsoft.SystemCenter.Library</ID>
         <Version>7.0.8433.0</Version>
@@ -25,6 +30,11 @@
       <Reference Alias="System">
         <ID>System.Library</ID>
         <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Perf">
+        <ID>System.Performance.Library</ID>
+        <Version>7.0.8433.0</Version>
         <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
       </Reference>
     </References>
@@ -52,10 +62,6 @@
           <Property ID="TimeZone" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
           <Property ID="LogDirPath" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
           <Property ID="LogDirCreationDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirModifiedDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirScanDate" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirSizeInMB" Type="double" AutoIncrement="false" Key="false" CaseSensitive="false" MinLength="0" Required="false" Scale="0" />
-          <Property ID="LogDirNoOfFiles" Type="double" AutoIncrement="false" Key="false" CaseSensitive="false" MinLength="0" Required="false" Scale="0" />
         </ClassType>
         <ClassType ID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Accessibility="Public" Abstract="false" Base="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" Hosted="false" Singleton="false" Extension="false">
           <Property ID="SiteName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="512" MinLength="0" Required="false" Scale="0" />
@@ -75,6 +81,48 @@
       </ClassTypes>
     </EntityTypes>
     <ModuleTypes>
+      <DataSourceModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MonitorItem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Key" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="WarningThresholdMegaBytes" Selector="$Config/WarningThresholdMegaBytes$" ParameterType="string" />
+          <OverrideableParameter ID="ErrorThresholdMegaBytes" Selector="$Config/ErrorThresholdMegaBytes$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <MonitorItem>$Config/MonitorItem$</MonitorItem>
+                <Key>$Config/Key$</Key>
+                <WarningThresholdMegaBytes>$Config/WarningThresholdMegaBytes$</WarningThresholdMegaBytes>
+                <ErrorThresholdMegaBytes>$Config/ErrorThresholdMegaBytes$</ErrorThresholdMegaBytes>
+              </DataSource>
+              <ConditionDetection ID="MapToPerf" TypeID="Perf!System.Performance.DataGenericMapper">
+                <ObjectName>Webservice LogDirWatcher</ObjectName>
+                <CounterName>LogDirSizeInMB</CounterName>
+                <InstanceName>$Config/Key$</InstanceName>
+                <Value>$Data/Property[@Name="LogDirSize"]$</Value>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="MapToPerf">
+                <Node ID="DS" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Perf!System.Performance.Data</OutputType>
+      </DataSourceModuleType>
       <DataSourceModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered" Accessibility="Internal" Batching="false">
         <Configuration>
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
@@ -97,9 +145,9 @@
                 <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                 <SyncTime>$Config/SyncTime$</SyncTime>
                 <MonitorItem>$Config/MonitorItem$</MonitorItem>
+                <Key>$Config/Key$</Key>
                 <WarningThresholdMegaBytes>$Config/WarningThresholdMegaBytes$</WarningThresholdMegaBytes>
                 <ErrorThresholdMegaBytes>$Config/ErrorThresholdMegaBytes$</ErrorThresholdMegaBytes>
-                <Key>$Config/Key$</Key>
               </DataSource>
               <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
                 <Expression>
@@ -129,9 +177,9 @@
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="MonitorItem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Key" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="WarningThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="ErrorThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="Key" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
@@ -241,6 +289,7 @@ Function Send-PropertyBag {
 	$bag.AddValue("testedAt",$testedAt)
 	$bag.AddValue("Supplement",$supplement)
 	$bag.AddValue("WindowsVersion",$WindowsVersion)
+	$bag.AddValue("LogDirSize",$logDirSize)
 	$bag.AddValue("ComputerDescription",$computerDescription)
 	$bag
 
@@ -1641,14 +1690,11 @@ if ($discoveryItem -eq 'IIS') {
 			$logInfoHash.Add('SiteId', $webSiteId)  
 			$logInfoHash.Add('Status', $webSite.state)  
 			$logInfoHash.Add('SitePath', $webSite.physicalPath)
-			$logInfoHash.Add('Bindings', $webBindings)
-			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('Bindings', $webBindings)			
 			$logInfoHash.Add('TimeZone', $timeZone)
-			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  			
 			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			
 			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
 			$null       = $webSitesAll.Add($logInfoObj)		
 
@@ -1671,10 +1717,6 @@ if ($discoveryItem -eq 'IIS') {
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
@@ -1756,11 +1798,7 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)				
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
+	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)		
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)	
@@ -1834,10 +1872,6 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)
@@ -2009,14 +2043,11 @@ if ($discoveryItem -eq 'IIS') {
 			$logInfoHash.Add('SiteId', $webSiteId)  
 			$logInfoHash.Add('Status', $webSite.state)  
 			$logInfoHash.Add('SitePath', $webSite.physicalPath)
-			$logInfoHash.Add('Bindings', $webBindings)
-			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('Bindings', $webBindings)			
 			$logInfoHash.Add('TimeZone', $timeZone)
-			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  			
 			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			
 			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
 			$null       = $webSitesAll.Add($logInfoObj)		
 
@@ -2039,10 +2070,6 @@ if ($discoveryItem -eq 'IIS') {
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
@@ -2124,11 +2151,7 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)				
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
+	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)		
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)	
@@ -2202,10 +2225,6 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)
@@ -2377,14 +2396,11 @@ if ($discoveryItem -eq 'IIS') {
 			$logInfoHash.Add('SiteId', $webSiteId)  
 			$logInfoHash.Add('Status', $webSite.state)  
 			$logInfoHash.Add('SitePath', $webSite.physicalPath)
-			$logInfoHash.Add('Bindings', $webBindings)
-			$logInfoHash.Add('LogDirScanDate', $scanDate)
+			$logInfoHash.Add('Bindings', $webBindings)			
 			$logInfoHash.Add('TimeZone', $timeZone)
-			$logInfoHash.Add('LogDirPath', $webLogDirectory)  
-			$logInfoHash.Add('LogDirModifiedDate', $webLogDirLastChanged)    
+			$logInfoHash.Add('LogDirPath', $webLogDirectory)  			
 			$logInfoHash.Add('LogDirCreationDate', $webLogDirCreated)    
-			$logInfoHash.Add('LogDirNoOfFiles', $webLogDirNoOfFiles)    
-			$logInfoHash.Add('LogDirSizeInMB', $webLogDirSizeMB)   
+			
 			$logInfoObj = New-Object -TypeName psobject -Property $logInfoHash
 			$null       = $webSitesAll.Add($logInfoObj)		
 
@@ -2407,10 +2423,6 @@ if ($discoveryItem -eq 'IIS') {
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$wbSite.TimeZone)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$wbSite.LogDirPath)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$wbSite.LogDirCreationDate)	
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$wbSite.LogDirModifiedDate)		
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$wbSite.LogDirScanDate)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$wbSite.LogDirSizeInMB)
-			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$wbSite.LogDirNoOfFiles)			
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteName$",$wbSite.SiteName)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/Bindings$",$wbSite.Bindings)	
 			$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS']/SiteId$",$wbSite.SiteId)	
@@ -2492,11 +2504,7 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/ComputerDescription$",$computerDescription)				
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
+	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)		
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)	
@@ -2570,10 +2578,6 @@ if ($discoveryItem -eq 'IIS') {
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/TimeZone$",$timeZone)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirPath$",$apacheLogDirectory)	
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirCreationDate$",$webLogDirCreated)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirModifiedDate$",$webLogDirLastChanged)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirScanDate$",$scanDate)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirSizeInMB$",$webLogDirSizeMB)	
-	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base']/LogDirNoOfFiles$",$webLogDirNoOfFiles)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcVersion$",$apacheVersion)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDisplayName$",$apacheDisplayName)			
 	$instance.AddProperty("$MPElement[Name='Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase']/SvcDescription$",$apacheDescription)
@@ -2629,6 +2633,12 @@ $discoveryData]]></ScriptBody>
               <AttributeType>0</AttributeType>
             </RegistryAttributeDefinition>
             <RegistryAttributeDefinition>
+              <AttributeName>KeyExists2</AttributeName>
+              <Path>SYSTEM\CurrentControlSet\Services\w3logsvc\Parameters</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
               <AttributeName>WindowsVersion</AttributeName>
               <Path>SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProductName</Path>
               <PathType>1</PathType>
@@ -2668,19 +2678,87 @@ $discoveryData]]></ScriptBody>
             </Settings>
           </InstanceSettings>
           <Expression>
-            <SimpleExpression>
-              <ValueExpression>
-                <XPathQuery>Values/KeyExists</XPathQuery>
-              </ValueExpression>
-              <Operator>Equal</Operator>
-              <ValueExpression>
-                <Value>true</Value>
-              </ValueExpression>
-            </SimpleExpression>
+            <Or>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery>Values/KeyExists</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>true</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery>Values/KeyExists2</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>true</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </Or>
           </Expression>
         </DataSource>
       </Discovery>
     </Discoveries>
+    <Rules>
+      <Rule ID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.Apache" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" Enabled="false" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+        <Category>PerformanceCollection</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered">
+            <IntervalSeconds>3600</IntervalSeconds>
+            <SyncTime />
+            <MonitorItem>Apache</MonitorItem>
+            <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$</Key>
+            <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+            <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="CollectToDB" TypeID="SC!Microsoft.SystemCenter.CollectPerformanceData" />
+          <WriteAction ID="CollectToDW" TypeID="MSDL!Microsoft.SystemCenter.DataWarehouse.PublishPerformanceData" />
+        </WriteActions>
+      </Rule>
+      <Rule ID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.ApacheTomcat" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" Enabled="false" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+        <Category>PerformanceCollection</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered">
+            <IntervalSeconds>3600</IntervalSeconds>
+            <SyncTime />
+            <MonitorItem>ApacheTomcat</MonitorItem>
+            <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$</Key>
+            <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+            <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="CollectToDB" TypeID="SC!Microsoft.SystemCenter.CollectPerformanceData" />
+          <WriteAction ID="CollectToDW" TypeID="MSDL!Microsoft.SystemCenter.DataWarehouse.PublishPerformanceData" />
+        </WriteActions>
+      </Rule>
+      <Rule ID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.IIS" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" Enabled="false" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+        <Category>PerformanceCollection</Category>
+        <DataSources>
+          <DataSource ID="DS" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered">
+            <IntervalSeconds>3600</IntervalSeconds>
+            <SyncTime />
+            <MonitorItem>IIS</MonitorItem>
+            <Key>$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS"]/Key$</Key>
+            <WarningThresholdMegaBytes>1000</WarningThresholdMegaBytes>
+            <ErrorThresholdMegaBytes>2000</ErrorThresholdMegaBytes>
+          </DataSource>
+        </DataSources>
+        <WriteActions>
+          <WriteAction ID="CollectToDB" TypeID="SC!Microsoft.SystemCenter.CollectPerformanceData" />
+          <WriteAction ID="CollectToDW" TypeID="MSDL!Microsoft.SystemCenter.DataWarehouse.PublishPerformanceData" />
+        </WriteActions>
+      </Rule>
+    </Rules>
     <Monitors>
       <UnitMonitor ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat" Accessibility="Public" Enabled="true" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
@@ -2921,19 +2999,15 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50">
-            <Name>State</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.ApacheTomcat</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
             <Name>ComputerName</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName</Id>
           </ColumnInfo>
-          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
             <Name>WindowsVersion</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion</Id>
           </ColumnInfo>
-          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
+          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
             <Name>Description</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description</Id>
           </ColumnInfo>
@@ -2971,19 +3045,15 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50">
-            <Name>State</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.Apache</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
             <Name>ComputerName</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName</Id>
           </ColumnInfo>
-          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
             <Name>WindowsVersion</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion</Id>
           </ColumnInfo>
-          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
+          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
             <Name>Description</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description</Id>
           </ColumnInfo>
@@ -2992,7 +3062,7 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.WebSites" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="true" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
             <Name>State</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS</Id>
           </ColumnInfo>
@@ -3013,23 +3083,15 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirPath</Id>
           </ColumnInfo>
           <ColumnInfo Index="5" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirModifiedDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirModifiedDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="6" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirScanDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirScanDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="7" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
-            <Name>LogDirSizeInMB</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirSizeInMB</Id>
+            <Name>LogDirCreationdDate</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirCreationDate</Id>
           </ColumnInfo>
         </Presentation>
       </View>
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.Apache.WebSites" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
             <Name>State</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache</Id>
           </ColumnInfo>
@@ -3050,23 +3112,15 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirPath</Id>
           </ColumnInfo>
           <ColumnInfo Index="5" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirModifiedDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirModifiedDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="6" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirScanDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirScanDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="7" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
-            <Name>LogDirSizeInMB</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirSizeInMB</Id>
+            <Name>LogDirCreationDate</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirCreationDate</Id>
           </ColumnInfo>
         </Presentation>
       </View>
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.WebSites" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
             <Name>State</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat</Id>
           </ColumnInfo>
@@ -3087,16 +3141,8 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirPath</Id>
           </ColumnInfo>
           <ColumnInfo Index="5" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirModifiedDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirModifiedDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="6" Grouped="false" IsSortable="true" Sorted="false" SortIndex="0" Visible="true" SortOrder="Ascending" Width="180">
-            <Name>LogDirScanDate</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirScanDate</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="7" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="120">
-            <Name>LogDirSizeInMB</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirSizeInMB</Id>
+            <Name>LogDirCreationDate</Name>
+            <Id>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base/LogDirCreationDate</Id>
           </ColumnInfo>
         </Presentation>
       </View>
@@ -3127,23 +3173,28 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
         <Category>Operations</Category>
         <Presentation>
-          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Descending" Width="50">
-            <Name>State</Name>
-            <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer.IIS</Id>
-          </ColumnInfo>
-          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
+          <ColumnInfo Index="0" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="120">
             <Name>ComputerName</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/ComputerName</Id>
           </ColumnInfo>
-          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
+          <ColumnInfo Index="1" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="220">
             <Name>WindowsVersion</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/WindowsVersion</Id>
           </ColumnInfo>
-          <ColumnInfo Index="3" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
+          <ColumnInfo Index="2" Grouped="false" IsSortable="true" Sorted="true" SortIndex="0" Visible="true" SortOrder="Ascending" Width="420">
             <Name>Description</Name>
             <Id>Windows.Server.Webservice.LogdirectoryWatcher.Computer/Description</Id>
           </ColumnInfo>
         </Presentation>
+      </View>
+      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat" TypeID="SC!Microsoft.SystemCenter.PerformanceViewType" Visible="true">
+        <Category>Operations</Category>
+      </View>
+      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS" TypeID="SC!Microsoft.SystemCenter.PerformanceViewType" Visible="true">
+        <Category>Operations</Category>
+      </View>
+      <View ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize" Accessibility="Internal" Target="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache" TypeID="SC!Microsoft.SystemCenter.PerformanceViewType" Visible="true">
+        <Category>Operations</Category>
       </View>
     </Views>
     <Folders>
@@ -3151,6 +3202,7 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
+      <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
     </Folders>
     <FolderItems>
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers.FolderItem" />
@@ -3163,6 +3215,9 @@ $remoteURL = [char]34 + '\\' + $ComputerName + '\' + $remoteLogs + [char]34
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.IIS.WebSites.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Alert.ApacheTomcat.WebSites.FolderItem" />
       <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Information" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers.FolderItem" />
+      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize.FolderItem" />
+      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize.FolderItem" />
+      <FolderItem ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize" Folder="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance" ID="Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize.FolderItem" />
     </FolderItems>
     <StringResources>
       <StringResource ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.LogDirectorySize.ApacheTomcat.AlertMessage" />
@@ -3311,6 +3366,18 @@ Windows Version: {3}</Description>
           <Name>OverErrorThreshold</Name>
           <Description>OverErrorThreshold</Description>
         </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.Apache">
+          <Name>Collect Apache LogDirSize in MB</Name>
+          <Description>Description for the new performance collection rule.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.ApacheTomcat">
+          <Name>Collect ApacheTomcat LogDirSize in MB</Name>
+          <Description>Description for the new performance collection rule.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Rule.LogDirWatcher.LogDirSize.IIS">
+          <Name>Collect IIS LogDirSize in MB</Name>
+          <Description>Description for the new performance collection rule.</Description>
+        </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.OpenLogDirectory.ConsoleTask">
           <Name>Open Log Directory</Name>
           <Description></Description>
@@ -3329,6 +3396,10 @@ Windows Version: {3}</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts">
           <Name>Alerts</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance">
+          <Name>Performance Collection</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.ApacheTomcat.Computers">
@@ -3369,6 +3440,18 @@ Windows Version: {3}</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.State.IIS.Computers">
           <Name>Computers - IIS</Name>
+          <Description>Description for the new view</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.ApacheTomcat.LogDirSize">
+          <Name>LogDirSize - ApacheTomcat</Name>
+          <Description>Description for the new view</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.IIS.LogDirSize">
+          <Name>LogDirSize - IIS</Name>
+          <Description>Description for the new view</Description>
+        </DisplayString>
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.View.Apache.LogDirSize">
+          <Name>LogDirSize - Apache</Name>
           <Description>Description for the new view</Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher">
@@ -3439,24 +3522,8 @@ Windows Version: {3}</Description>
           <Name>LogDirCreationDate</Name>
           <Description></Description>
         </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirModifiedDate">
-          <Name>LogDirModifiedDate</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirNoOfFiles">
-          <Name>LogDirNoOfFiles</Name>
-          <Description></Description>
-        </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirPath">
           <Name>LogDirPath</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirScanDate">
-          <Name>LogDirScanDate</Name>
-          <Description></Description>
-        </DisplayString>
-        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="LogDirSizeInMB">
-          <Name>LogDirSizeInMB</Name>
           <Description></Description>
         </DisplayString>
         <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Base" SubElementID="TimeZone">

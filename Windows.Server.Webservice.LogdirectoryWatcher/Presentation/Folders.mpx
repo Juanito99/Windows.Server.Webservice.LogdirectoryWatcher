@@ -9,6 +9,9 @@
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.HealthState" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
 
       <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Alerts" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
+
+      <Folder ID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance" Accessibility="Internal" ParentFolder="Windows.Server.Webservice.LogdirectoryWatcher.Folders" />
+      
     </Folders>
   
   </Presentation>
@@ -35,7 +38,12 @@
           <Name>Alerts</Name>
           <Description></Description>
         </DisplayString>
-        
+
+        <DisplayString ElementID="Windows.Server.Webservice.LogdirectoryWatcher.Folders.Performance">
+          <Name>Performance Collection</Name>
+          <Description></Description>
+        </DisplayString>
+
       </DisplayStrings>
     </LanguagePack>
   </LanguagePacks>

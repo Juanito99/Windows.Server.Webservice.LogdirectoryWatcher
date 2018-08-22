@@ -21,7 +21,8 @@ This Management Pack discovers log-folders and raises alerts based on thresholds
 ### Recoveries:
 ![Recoveries](https://raw.githubusercontent.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/master/PicturesForGitWebSite/Recoveries.png)
 
-
+### Performance Rules:
+![Recoveries](https://raw.githubusercontent.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/master/PicturesForGitWebSite/Rules.png)
 
 ### More information on:
 [Documentation](https://github.com/Juanito99/Windows.Server.Webservice.LogdirectoryWatcher/blob/master/Documentation/MonitoringWebserversLogdirectorySizeWithSCOM.pdf)

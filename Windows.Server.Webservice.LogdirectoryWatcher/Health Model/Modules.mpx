@@ -2,6 +2,50 @@
   <TypeDefinitions>
     <ModuleTypes>
 
+      <!-- Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered -->
+      <DataSourceModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MonitorItem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Key" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />          
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="WarningThresholdMegaBytes" Selector="$Config/WarningThresholdMegaBytes$" ParameterType="string" />
+          <OverrideableParameter ID="ErrorThresholdMegaBytes" Selector="$Config/ErrorThresholdMegaBytes$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="DS" TypeID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+                <MonitorItem>$Config/MonitorItem$</MonitorItem>
+                <Key>$Config/Key$</Key>
+                <WarningThresholdMegaBytes>$Config/WarningThresholdMegaBytes$</WarningThresholdMegaBytes>
+                <ErrorThresholdMegaBytes>$Config/ErrorThresholdMegaBytes$</ErrorThresholdMegaBytes>                
+              </DataSource>
+              <ConditionDetection ID="MapToPerf" TypeID="Perf!System.Performance.DataGenericMapper">
+                <ObjectName>Webservice LogDirWatcher</ObjectName>
+                <CounterName>LogDirSizeInMB</CounterName>
+                <InstanceName>$Config/Key$</InstanceName>
+                <Value>$Data/Property[@Name="LogDirSize"]$</Value>                
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="MapToPerf">
+                <Node ID="DS" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>Perf!System.Performance.Data</OutputType>
+      </DataSourceModuleType>
+
       <!-- Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered -->
       <DataSourceModuleType ID="Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.PropertyBag.Filtered" Accessibility="Internal" Batching="false">
         <Configuration>
@@ -25,9 +69,9 @@
                 <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
                 <SyncTime>$Config/SyncTime$</SyncTime>
                 <MonitorItem>$Config/MonitorItem$</MonitorItem>
-                <WarningThresholdMegaBytes>$Config/WarningThresholdMegaBytes$</WarningThresholdMegaBytes>
-                <ErrorThresholdMegaBytes>$Config/ErrorThresholdMegaBytes$</ErrorThresholdMegaBytes>
                 <Key>$Config/Key$</Key>
+                <WarningThresholdMegaBytes>$Config/WarningThresholdMegaBytes$</WarningThresholdMegaBytes>
+                <ErrorThresholdMegaBytes>$Config/ErrorThresholdMegaBytes$</ErrorThresholdMegaBytes>                
               </DataSource>
               <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
                 <Expression>
@@ -60,9 +104,9 @@
           <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="MonitorItem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="WarningThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="ErrorThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
           <xsd:element name="Key" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />          
+          <xsd:element name="ErrorThresholdMegaBytes" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />          
         </Configuration>
         <OverrideableParameters>
           <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />

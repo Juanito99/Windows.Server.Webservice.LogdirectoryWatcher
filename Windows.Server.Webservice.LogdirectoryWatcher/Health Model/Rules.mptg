@@ -1,0 +1,64 @@
+<TemplateGroup>
+  <Instances>
+    <Instance ID="Instance20d472e128614463a628eac4faffd9ed" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.PerformanceCollectionRule" Version="1.0.0.0">
+      <PerformanceCollectionRuleConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <Id>Rule.LogDirWatcher.LogDirSize.Apache</Id>
+        <DisplayName>Collect Apache LogDirSize in MB</DisplayName>
+        <Description>Description for the new performance collection rule.</Description>
+        <Category>PerformanceCollection</Category>
+        <ConfirmDelivery>false</ConfirmDelivery>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.Apache</Target>
+        <Enabled>false</Enabled>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <DiscardLevel>100</DiscardLevel>
+        <ConditionDetectionId>CD</ConditionDetectionId>
+        <DataSourceId>DS</DataSourceId>
+        <DataSourceConfig>&lt;IntervalSeconds&gt;3600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;Apache&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;1000&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;2000&lt;/ErrorThresholdMegaBytes&gt;</DataSourceConfig>
+        <DataSourceType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered</DataSourceType>
+        <CollectToDB>true</CollectToDB>
+        <CollectToDW>true</CollectToDW>
+      </PerformanceCollectionRuleConfig>
+    </Instance>
+    <Instance ID="Instance93d873b77c81482c8e82857531b181e7" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.PerformanceCollectionRule" Version="1.0.0.0">
+      <PerformanceCollectionRuleConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <Id>Rule.LogDirWatcher.LogDirSize.ApacheTomcat</Id>
+        <DisplayName>Collect ApacheTomcat LogDirSize in MB</DisplayName>
+        <Description>Description for the new performance collection rule.</Description>
+        <Category>PerformanceCollection</Category>
+        <ConfirmDelivery>false</ConfirmDelivery>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheTomcat</Target>
+        <Enabled>false</Enabled>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <DiscardLevel>100</DiscardLevel>
+        <ConditionDetectionId>CD</ConditionDetectionId>
+        <DataSourceId>DS</DataSourceId>
+        <DataSourceConfig>&lt;IntervalSeconds&gt;3600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;ApacheTomcat&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.ApacheBase"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;1000&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;2000&lt;/ErrorThresholdMegaBytes&gt;</DataSourceConfig>
+        <DataSourceType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered</DataSourceType>
+        <CollectToDB>true</CollectToDB>
+        <CollectToDW>true</CollectToDW>
+      </PerformanceCollectionRuleConfig>
+    </Instance>
+    <Instance ID="Instance781f9c1aa9ce4de68714dc5163a92bfa" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.PerformanceCollectionRule" Version="1.0.0.0">
+      <PerformanceCollectionRuleConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <Id>Rule.LogDirWatcher.LogDirSize.IIS</Id>
+        <DisplayName>Collect IIS LogDirSize in MB</DisplayName>
+        <Description>Description for the new performance collection rule.</Description>
+        <Category>PerformanceCollection</Category>
+        <ConfirmDelivery>false</ConfirmDelivery>
+        <Target>Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS</Target>
+        <Enabled>false</Enabled>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <DiscardLevel>100</DiscardLevel>
+        <ConditionDetectionId>CD</ConditionDetectionId>
+        <DataSourceId>DS</DataSourceId>
+        <DataSourceConfig>&lt;IntervalSeconds&gt;3600&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;MonitorItem&gt;IIS&lt;/MonitorItem&gt;&lt;Key&gt;$Target/Property[Type="Windows.Server.Webservice.LogdirectoryWatcher.WebSite.IIS"]/Key$&lt;/Key&gt;&lt;WarningThresholdMegaBytes&gt;1000&lt;/WarningThresholdMegaBytes&gt;&lt;ErrorThresholdMegaBytes&gt;2000&lt;/ErrorThresholdMegaBytes&gt;</DataSourceConfig>
+        <DataSourceType>Windows.Server.Webservice.LogdirectoryWatcher.Monitor.ThreeState.Test.Performance.Filtered</DataSourceType>
+        <CollectToDB>true</CollectToDB>
+        <CollectToDW>true</CollectToDW>
+      </PerformanceCollectionRuleConfig>
+    </Instance>
+  </Instances>
+</TemplateGroup>
